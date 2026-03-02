@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import Deposit from '../models/Deposit.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { createNotification } from '../utils/notifications.js';
 
@@ -58,15 +59,30 @@ router.get('/status', authMiddleware, async (req, res) => {
                 referredBy: user.invitationCode,
                 createdAt: { $gte: missionStart, $lte: missionEnd }
             });
-            aCount = directs.length;
 
-            // Gen 2 (Indirects) within the mission window
-            const directCodes = directs.map(u => u.invitationCode);
+            // Only count directs who have at least one approved deposit
+            const directIds = directs.map(u => u._id);
+            const depositedDirectIds = await Deposit.distinct('userId', {
+                userId: { $in: directIds },
+                status: 'approved'
+            });
+            aCount = depositedDirectIds.length;
+
+            // Gen 2 (Indirects) within the mission window - only deposited directs' referrals
+            const depositedDirects = directs.filter(u => depositedDirectIds.some(id => id.equals(u._id)));
+            const directCodes = depositedDirects.map(u => u.invitationCode);
             const secondGen = await User.find({
                 referredBy: { $in: directCodes },
                 createdAt: { $gte: missionStart, $lte: missionEnd }
             });
-            bCount = secondGen.length;
+
+            // Only count indirects who have at least one approved deposit
+            const secondGenIds = secondGen.map(u => u._id);
+            const depositedSecondGenIds = await Deposit.distinct('userId', {
+                userId: { $in: secondGenIds },
+                status: 'approved'
+            });
+            bCount = depositedSecondGenIds.length;
 
             totalPoints = aCount + Math.floor(bCount / 2);
         }
@@ -115,14 +131,30 @@ router.post('/claim', authMiddleware, async (req, res) => {
             referredBy: user.invitationCode,
             createdAt: { $gte: missionStart, $lte: missionEnd }
         });
-        const aCount = directs.length;
 
-        const directCodes = directs.map(u => u.invitationCode);
+        // Only count directs who have at least one approved deposit
+        const directIds = directs.map(u => u._id);
+        const depositedDirectIds = await Deposit.distinct('userId', {
+            userId: { $in: directIds },
+            status: 'approved'
+        });
+        const aCount = depositedDirectIds.length;
+
+        // Gen 2 - only from deposited directs
+        const depositedDirects = directs.filter(u => depositedDirectIds.some(id => id.equals(u._id)));
+        const directCodes = depositedDirects.map(u => u.invitationCode);
         const secondGen = await User.find({
             referredBy: { $in: directCodes },
             createdAt: { $gte: missionStart, $lte: missionEnd }
         });
-        const bCount = secondGen.length;
+
+        // Only count indirects who have at least one approved deposit
+        const secondGenIds = secondGen.map(u => u._id);
+        const depositedSecondGenIds = await Deposit.distinct('userId', {
+            userId: { $in: secondGenIds },
+            status: 'approved'
+        });
+        const bCount = depositedSecondGenIds.length;
 
         const totalPoints = aCount + Math.floor(bCount / 2);
 

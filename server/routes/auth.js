@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Deposit from '../models/Deposit.js';
 import { authMiddleware } from '../middleware/auth.js';
 import fs from 'fs';
 import path from 'path';
@@ -425,14 +426,30 @@ router.get('/me', authMiddleware, async (req, res) => {
                 referredBy: user.invitationCode,
                 createdAt: { $gte: missionStart, $lte: missionEnd }
             });
-            starACount = starDirects.length;
 
-            const starDirectCodes = starDirects.map(u => u.invitationCode);
+            // Only count directs who have at least one approved deposit
+            const directIds = starDirects.map(u => u._id);
+            const depositedDirectIds = await Deposit.distinct('userId', {
+                userId: { $in: directIds },
+                status: 'approved'
+            });
+            starACount = depositedDirectIds.length;
+
+            // Gen 2 - only from deposited directs
+            const depositedDirects = starDirects.filter(u => depositedDirectIds.some(id => id.equals(u._id)));
+            const starDirectCodes = depositedDirects.map(u => u.invitationCode);
             const starSecondGen = await User.find({
                 referredBy: { $in: starDirectCodes },
                 createdAt: { $gte: missionStart, $lte: missionEnd }
             });
-            starBCount = starSecondGen.length;
+
+            // Only count indirects who have at least one approved deposit
+            const secondGenIds = starSecondGen.map(u => u._id);
+            const depositedSecondGenIds = await Deposit.distinct('userId', {
+                userId: { $in: secondGenIds },
+                status: 'approved'
+            });
+            starBCount = depositedSecondGenIds.length;
             currentStarPoints = starACount + Math.floor(starBCount / 2);
         }
 
