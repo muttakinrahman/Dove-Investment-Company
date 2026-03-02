@@ -25,7 +25,8 @@ const adminLogSchema = new mongoose.Schema({
             'settings_updated',
             'banner_created',
             'banner_updated',
-            'banner_deleted'
+            'banner_deleted',
+            'impersonate_user'
         ]
     },
     targetUserId: {
