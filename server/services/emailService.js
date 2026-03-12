@@ -40,6 +40,7 @@ const getEmailTemplate = (type, data) => {
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                 padding: 40px 30px; 
                 text-align: center; 
+                border-radius: 12px 12px 0 0;
             }
             .logo { 
                 font-size: 32px; 
@@ -358,8 +359,6 @@ export const sendEmail = async ({ to, subject, type, data }) => {
         // Validate SMTP configuration
         if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
             console.warn('⚠️  SMTP not configured. Email would be sent to:', to);
-            console.warn('Subject:', subject);
-            console.warn('Data:', data);
             return { success: false, message: 'SMTP not configured' };
         }
 
@@ -451,34 +450,52 @@ export const sendDepositReceivedEmail = async (user, deposit) => {
 
 export const sendVerificationEmail = async (email, otpCode) => {
     try {
+        // Validate SMTP configuration
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+            console.warn('⚠️  SMTP not configured. Verification email would be sent to:', email);
+            return false;
+        }
+
         const transporter = createTransporter();
         const subject = 'Your Verification Code - Dove Investment';
+        
+        // Use consistent from field like sendEmail
+        const from = `"${process.env.SMTP_FROM_NAME || 'Dove'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`;
+
         const template = `
-            ${getEmailTemplate('header', null)}
-            <div class="content">
-                <h1 class="title">Verify Your Email</h1>
-                <p class="message">Thank you for registering with Dove Investment! Please use the 6-digit verification code below to complete your registration.</p>
-                
-                <div class="amount-highlight" style="letter-spacing: 5px; font-size: 36px; margin: 30px 0;">
-                    ${otpCode}
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 40px auto; padding: 0; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">Dove Investment</h1>
+                    <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Your Trusted Investment Platform</p>
                 </div>
-                
-                <p class="message" style="font-size: 14px;">This code will expire in 5 minutes. If you did not request this verification, please ignore this email.</p>
+                <div style="padding: 40px 30px;">
+                    <h2 style="color: #1a202c; font-size: 24px; font-weight: 700; margin-bottom: 16px;">Verify Your Email</h2>
+                    <p style="color: #4a5568; line-height: 1.6; margin-bottom: 24px;">Thank you for registering with Dove Investment! Please use the 6-digit verification code below to complete your registration.</p>
+                    
+                    <div style="background-color: #f7fafc; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;">
+                        <span style="font-size: 36px; font-weight: 700; color: #764ba2; letter-spacing: 10px; font-family: monospace;">${otpCode}</span>
+                    </div>
+                    
+                    <p style="color: #718096; font-size: 14px; text-align: center; margin-bottom: 0;">This code will expire in 5 minutes. If you did not request this, please ignore this email.</p>
+                </div>
+                <div style="background-color: #f7fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="color: #718096; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} Dove Investment Gold Mine. All rights reserved.</p>
+                    <p style="color: #718096; font-size: 12px; margin-top: 5px;">doveinvestment.cloud</p>
+                </div>
             </div>
-            ${getEmailTemplate('footer', null)}
         `;
 
-        await transporter.sendMail({
-            from: process.env.SMTP_FROM || `"Dove Investment" <${process.env.SMTP_USER}>`,
+        const info = await transporter.sendMail({
+            from: from,
             to: email,
             subject: subject,
             html: template
         });
 
-        console.log(`Verification email sent successfully to ${email}`);
+        console.log(`✅ Verification email sent successfully to ${email}. MessageId: ${info.messageId}`);
         return true;
     } catch (error) {
-        console.error('Verification email error:', error);
+        console.error('❌ Verification email error:', error.message);
         return false;
     }
 };
