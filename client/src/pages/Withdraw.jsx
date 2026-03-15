@@ -349,7 +349,7 @@ const Withdraw = () => {
                             </div>
                             <button
                                 type="button"
-                                onClick={() => navigate('/security')}
+                                onClick={() => navigate('/settings/security')}
                                 className="w-full py-3 bg-primary text-black font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-primary-hover transition-all shadow-lg shadow-primary/20 active:scale-95"
                             >
                                 Setup Google Authenticator
