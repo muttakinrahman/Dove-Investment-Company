@@ -374,8 +374,15 @@ const Lend = () => {
                                             placeholder="Enter amount"
                                         />
                                         <button
-                                            onClick={() => setInvestAmount(showInvestModal.maxAmount.toString())}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-primary text-xs font-bold uppercase tracking-wider"
+                                            onClick={() => {
+                                                const balance = user?.balance || 0;
+                                                const min = showInvestModal.minAmount;
+                                                const max = showInvestModal.maxAmount;
+                                                if (balance < min) return;
+                                                const amount = Math.min(balance, max);
+                                                setInvestAmount(amount.toString());
+                                            }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/10 px-2 py-1 rounded-lg transition-all"
                                         >
                                             Max
                                         </button>
