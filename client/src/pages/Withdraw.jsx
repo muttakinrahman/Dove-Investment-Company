@@ -59,8 +59,6 @@ const Withdraw = () => {
 
     const methods = [
         { id: 'trc20', name: 'USDT (TRC20)', color: '#26A17B', symbol: '₮' },
-        { id: 'btc', name: 'Bitcoin', color: '#F7931A', symbol: '₿' },
-        { id: 'eth', name: 'Ethereum', color: '#627EEA', symbol: 'Ξ' },
         { id: 'bsc', name: 'BSC', color: '#F0B90B', symbol: 'B' }
     ];
 

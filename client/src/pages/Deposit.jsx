@@ -29,22 +29,6 @@ const Deposit = () => {
             logo: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png'
         },
         {
-            id: 'BTC',
-            name: 'Bitcoin (BTC)',
-            address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-            coin: 'BTC',
-            network: 'Bitcoin',
-            logo: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png'
-        },
-        {
-            id: 'ETH',
-            name: 'Ethereum (ETH)',
-            address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-            coin: 'ETH',
-            network: 'Ethereum',
-            logo: 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png'
-        },
-        {
             id: 'BSC',
             name: 'Binance Smart Chain',
             address: '0x28C6c06298d514Db089934071355E5743bf21d60',
