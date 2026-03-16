@@ -83,7 +83,11 @@ router.post('/create', authMiddleware, async (req, res) => {
             });
         }
 
-        if (user.balance < amount) {
+        // Check balance using rounded values (compare as cents) to avoid precision issues
+        const roundedBalance = Math.round(user.balance * 100);
+        const roundedAmount = Math.round(amount * 100);
+
+        if (roundedBalance < roundedAmount) {
             return res.status(400).json({ message: 'Insufficient balance' });
         }
 

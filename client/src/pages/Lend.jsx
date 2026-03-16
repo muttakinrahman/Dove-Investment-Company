@@ -87,12 +87,12 @@ const Lend = () => {
             return;
         }
 
-        // Check balance using rounded values to avoid precision issues
-        const roundedBalance = Math.floor((user?.balance || 0) * 100);
+        // Check balance using rounded values to avoid precision issues (compare as cents)
+        const roundedBalance = Math.round((user?.balance || 0) * 100);
         const roundedAmount = Math.round(numAmount * 100);
 
         if (roundedBalance < roundedAmount) {
-            setError(`Insufficient balance. Minimum investment for this plan is $${pkg.minAmount}. Your balance: $${(user?.balance || 0).toFixed(2)}`);
+            setError(`Insufficient balance. Your balance: $${(user?.balance || 0).toFixed(2)}`);
             return;
         }
 
