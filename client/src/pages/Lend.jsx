@@ -379,8 +379,9 @@ const Lend = () => {
                                                 const min = showInvestModal.minAmount;
                                                 const max = showInvestModal.maxAmount;
                                                 if (balance < min) return;
+                                                // Handle floating point precision and respect limits
                                                 const amount = Math.min(balance, max);
-                                                setInvestAmount(amount.toString());
+                                                setInvestAmount(amount.toFixed(2));
                                             }}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/10 px-2 py-1 rounded-lg transition-all"
                                         >
