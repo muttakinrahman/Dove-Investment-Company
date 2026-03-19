@@ -76,8 +76,15 @@ const MyTeam = () => {
                                 <Users size={32} className="text-primary" />
                             </div>
                             <h2 className="text-4xl font-black text-white tracking-tighter">
-                                {teamListData?.total > 0 ? teamListData.total : ''}
+                                {teamListData?.total > 0 ? teamListData.total : '0'}
                             </h2>
+                        </div>
+                        {/* Active (Deposited) Members Count */}
+                        <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full">
+                            <CheckCircle2 size={14} className="text-green-400" />
+                            <span className="text-xs font-bold text-green-400">
+                                Active Members: {teamListData?.activeCount ?? 0}
+                            </span>
                         </div>
                     </div>
                 </div>

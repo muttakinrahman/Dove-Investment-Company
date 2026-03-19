@@ -124,7 +124,11 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             hasDeposited: await checkDeposit(u._id)
         })));
 
-        res.json({ gen1, gen2, gen3 });
+        const allMembers = [...gen1, ...gen2, ...gen3];
+        const total = allMembers.length;
+        const activeCount = allMembers.filter(m => m.hasDeposited).length;
+
+        res.json({ gen1, gen2, gen3, total, activeCount });
 
     } catch (error) {
         console.error('Team list error:', error);
