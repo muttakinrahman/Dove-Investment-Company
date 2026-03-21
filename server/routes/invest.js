@@ -8,6 +8,49 @@ import Notification from '../models/Notification.js';
 
 const router = express.Router();
 
+// ====== Bangladesh Timezone Helper (UTC+6) ======
+// 10 AM Bangladesh Time = 4 AM UTC
+const BD_CLAIM_HOUR_UTC = 4; // 10 AM BD = 4 AM UTC
+
+/**
+ * Count how many 10 AM Bangladesh Time (4 AM UTC) boundaries 
+ * have passed between lastClaimDate and now.
+ * Returns { claimableDays, lastValidClaimTime }
+ */
+function countClaimableDays(lastClaimDate, now) {
+    let claimableDays = 0;
+    let lastValidClaimTime = null;
+
+    // Start from the day of lastClaimDate (in UTC)
+    // We'll check each day's 4 AM UTC (= 10 AM Bangladesh)
+    const startDay = new Date(Date.UTC(
+        lastClaimDate.getUTCFullYear(),
+        lastClaimDate.getUTCMonth(),
+        lastClaimDate.getUTCDate(),
+        BD_CLAIM_HOUR_UTC, 0, 0, 0
+    ));
+
+    // If lastClaimDate is already past today's 4AM UTC, start from next day's 4AM
+    let checkpoint;
+    if (lastClaimDate >= startDay) {
+        // lastClaimDate is after this day's 4 AM UTC, so next boundary is tomorrow
+        checkpoint = new Date(startDay.getTime() + 24 * 60 * 60 * 1000);
+    } else {
+        // lastClaimDate is before this day's 4 AM UTC, so this day's 4AM is the first boundary
+        checkpoint = new Date(startDay.getTime());
+    }
+
+    // Count each 4 AM UTC boundary that has passed
+    while (checkpoint <= now) {
+        claimableDays++;
+        lastValidClaimTime = new Date(checkpoint.getTime());
+        // Move to next day's 4 AM UTC
+        checkpoint = new Date(checkpoint.getTime() + 24 * 60 * 60 * 1000);
+    }
+
+    return { claimableDays, lastValidClaimTime };
+}
+
 // Get all investment packages
 router.get('/packages', authMiddleware, async (req, res) => {
     try {
@@ -105,7 +148,7 @@ router.post('/create', authMiddleware, async (req, res) => {
 
         user.investments.push({
             package: {
-                packageNumber: pkg.duration, // Using duration as an identifier for now or add a code
+                packageNumber: pkg.duration,
                 name: pkg.name,
                 investmentAmount: amount,
                 dailyEarning: dailyReturn,
@@ -151,14 +194,6 @@ router.get('/income', authMiddleware, async (req, res) => {
         }
 
         const now = new Date();
-
-        // Get today's 10 AM Bangladesh time (UTC+6)
-        const today10AM = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-        today10AM.setHours(10, 0, 0, 0);
-
-        // Convert back to UTC for comparison
-        const todayClaimTime = new Date(today10AM.toLocaleString('en-US', { timeZone: 'UTC' }));
-
         let totalClaimable = 0;
         let claimableCount = 0;
         const activeIncome = [];
@@ -166,27 +201,8 @@ router.get('/income', authMiddleware, async (req, res) => {
         // Check active investments for claimable income
         user.investments.forEach(inv => {
             if (inv.status === 'active') {
-                const lastClaim = inv.lastEarningDate || inv.startDate;
-                const lastClaimDate = new Date(lastClaim);
-
-                // Calculate how many 10 AM periods have passed
-                let claimableDays = 0;
-                let checkDate = new Date(lastClaimDate);
-                checkDate.setHours(0, 0, 0, 0);
-
-                while (checkDate < now) {
-                    checkDate.setDate(checkDate.getDate() + 1);
-                    const thisDayClaimTime = new Date(checkDate);
-                    thisDayClaimTime.setHours(10, 0, 0, 0);
-
-                    // Convert to Bangladesh time for comparison
-                    const bdTimeClaim = new Date(thisDayClaimTime.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
-
-                    if (now >= thisDayClaimTime && lastClaimDate < thisDayClaimTime) {
-                        claimableDays++;
-                    }
-                }
-
+                const lastClaimDate = new Date(inv.lastEarningDate || inv.startDate);
+                const { claimableDays } = countClaimableDays(lastClaimDate, now);
                 const amount = claimableDays * inv.package.dailyEarning;
 
                 if (amount > 0) {
@@ -231,29 +247,11 @@ router.post('/collect', authMiddleware, async (req, res) => {
         let completedPackages = [];
         let incomeDetails = [];
 
-        // Iterate and collect
+        // Iterate and collect ALL accumulated days
         user.investments.forEach(inv => {
             if (inv.status === 'active') {
-                const lastClaim = inv.lastEarningDate || inv.startDate;
-                const lastClaimDate = new Date(lastClaim);
-
-                // Calculate how many 10 AM periods have passed (same logic as GET /income)
-                let claimableDays = 0;
-                let checkDate = new Date(lastClaimDate);
-                checkDate.setHours(0, 0, 0, 0);
-                let lastValidClaimTime = null;
-
-                while (checkDate < now) {
-                    checkDate.setDate(checkDate.getDate() + 1);
-                    const thisDayClaimTime = new Date(checkDate);
-                    thisDayClaimTime.setHours(10, 0, 0, 0);
-
-                    if (now >= thisDayClaimTime && lastClaimDate < thisDayClaimTime) {
-                        claimableDays++;
-                        lastValidClaimTime = new Date(thisDayClaimTime);
-                    }
-                }
-
+                const lastClaimDate = new Date(inv.lastEarningDate || inv.startDate);
+                const { claimableDays, lastValidClaimTime } = countClaimableDays(lastClaimDate, now);
                 const amount = claimableDays * inv.package.dailyEarning;
 
                 if (amount > 0) {
@@ -266,7 +264,7 @@ router.post('/collect', authMiddleware, async (req, res) => {
                         days: claimableDays
                     });
 
-                    // Set last claim to the most recent 10 AM that passed
+                    // Set last claim to the most recent 10 AM BD that passed
                     if (lastValidClaimTime) {
                         inv.lastEarningDate = lastValidClaimTime;
                     }
@@ -280,7 +278,7 @@ router.post('/collect', authMiddleware, async (req, res) => {
                     completedPackages.push(inv.package.name);
 
                     // Log completion
-                    console.log(`[Invest] Package expired/completed: ${inv.package.name} for user ${user.phone}`);
+                    console.log(`[Invest] Package expired/completed: ${inv.package.name} for user ${user.phone || user.email}`);
                 }
             }
         });
