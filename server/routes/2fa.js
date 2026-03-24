@@ -1,4 +1,4 @@
-import express from 'express';
+ import express from 'express';
 import speakeasy from 'speakeasy';
 import { authMiddleware } from '../middleware/auth.js';
 import User from '../models/User.js';

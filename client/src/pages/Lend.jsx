@@ -180,7 +180,7 @@ const Lend = () => {
                         {packages.map((pkg, index) => {
                             // Use targetLevel for display consistency
                             const currentLevel = targetLevel;
-                            const dispayName = pkg.name.replace(/Plan/i, '').trim();
+                            const dispayName = pkg.name.replace(/Plan/i, '').replace(/\(L\d+\)/gi, '').trim();
 
                             // Check if user has active investments for this package
                             const activeInvestments = user?.investments?.filter(inv =>
