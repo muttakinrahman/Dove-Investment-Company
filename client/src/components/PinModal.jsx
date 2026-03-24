@@ -78,33 +78,37 @@ const PinModal = ({ isOpen, onClose, onSuccess, mode = 'verify' }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-sm glass-card p-6 scale-animation">
+            {/* White blur backdrop */}
+            <div className="absolute inset-0 bg-white/30 backdrop-blur-md" onClick={onClose}></div>
+
+            {/* White card */}
+            <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-7 scale-animation">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-white/40 hover:text-white"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
                 >
                     <X size={20} />
                 </button>
 
                 <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary/20">
                         {mode === 'setup' ? (
-                            <KeyRound size={32} className="text-primary" />
+                            <KeyRound size={30} className="text-primary" />
                         ) : (
-                            <Lock size={32} className="text-primary" />
+                            <Lock size={30} className="text-primary" />
                         )}
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">
                         {mode === 'setup' ? 'Set Transaction PIN' : 'Enter Transaction PIN'}
                     </h2>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-gray-500 text-sm">
                         {mode === 'setup'
                             ? 'Create a 6-digit PIN for secure transactions'
                             : 'Please enter your 6-digit PIN to continue'}
                     </p>
                 </div>
 
+                {/* PIN inputs */}
                 <div className="flex justify-center gap-2 mb-6">
                     {pin.map((digit, index) => (
                         <input
@@ -116,13 +120,14 @@ const PinModal = ({ isOpen, onClose, onSuccess, mode = 'verify' }) => {
                             value={digit}
                             onChange={(e) => handleChange(index, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(index, e)}
-                            className="w-10 h-12 bg-dark-300 border border-white/10 rounded-lg text-center text-xl font-bold text-white focus:border-primary focus:outline-none transition-colors"
+                            className="w-11 h-13 bg-gray-100 border-2 border-gray-200 rounded-xl text-center text-xl font-bold text-gray-900 focus:border-primary focus:bg-primary/5 focus:outline-none transition-all shadow-inner"
+                            style={{ height: '3.25rem' }}
                         />
                     ))}
                 </div>
 
                 {error && (
-                    <div className="text-red-400 text-sm text-center mb-4 bg-red-500/10 py-2 rounded-lg">
+                    <div className="text-red-500 text-sm text-center mb-4 bg-red-50 border border-red-100 py-2 rounded-xl">
                         {error}
                     </div>
                 )}
@@ -130,7 +135,7 @@ const PinModal = ({ isOpen, onClose, onSuccess, mode = 'verify' }) => {
                 <button
                     onClick={handleSubmit}
                     disabled={loading || pin.some(d => !d)}
-                    className="w-full py-3 bg-gradient-primary rounded-xl text-white font-bold disabled:opacity-50 hover:shadow-glow transition-all"
+                    className="w-full py-3.5 bg-gradient-primary rounded-xl text-white font-bold text-sm disabled:opacity-40 hover:shadow-glow transition-all tracking-wide"
                 >
                     {loading ? 'Processing...' : (mode === 'setup' ? 'Set PIN' : 'Verify PIN')}
                 </button>
