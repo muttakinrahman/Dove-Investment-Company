@@ -17,12 +17,12 @@ const LevelRequirements = () => {
     const currentTeam = user?.stats?.teamMembers || 0;
 
     const levelRequirements = [
-        { from: 0, to: 1, members: 7, minInvestment: 50, maxInvestment: 2000, tree: { l1: 3, l2: 4 }, incomeRates: { d7: '0.90%', d30: '1.20%', d60: '1.50%', d90: '1.80%' }, teamIncome: { first: '9%', second: '6%', third: '3%' } },
-        { from: 1, to: 2, members: 18, minInvestment: 300, maxInvestment: 3000, tree: { l1: 8, l2: 10 }, incomeRates: { d7: '1.10%', d30: '1.40%', d60: '1.70%', d90: '2.00%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } },
-        { from: 2, to: 3, members: 50, minInvestment: 800, maxInvestment: 4000, tree: { l1: 15, l2: 35 }, incomeRates: { d7: '1.40%', d30: '1.70%', d60: '2.00%', d90: '2.40%' }, teamIncome: { first: '11%', second: '8%', third: '5%' } },
-        { from: 3, to: 4, members: 80, minInvestment: 1300, maxInvestment: 5000, tree: { l1: 30, l2: 50 }, incomeRates: { d7: '1.80%', d30: '2.20%', d60: '2.70%', d90: '3.20%' }, teamIncome: { first: '12%', second: '9%', third: '6%' } },
-        { from: 4, to: 5, members: 140, minInvestment: 2000, maxInvestment: 6000, tree: { l1: 45, l2: 95 }, incomeRates: { d7: '2.20%', d30: '2.60%', d60: '3.10%', d90: '3.70%' }, teamIncome: { first: '13%', second: '10%', third: '7%' } },
-        { from: 5, to: 6, members: null, minInvestment: 3000, maxInvestment: 7000, tree: { l1: 45, l2: 95 }, incomeRates: { d7: '2.70%', d30: '3.30%', d60: '4.00%', d90: '4.70%' }, teamIncome: { first: '14%', second: '11%', third: '8%' } }
+        { from: 0, to: 1, members: null, minInvestment: 50, maxInvestment: 2000, tree: null, incomeRates: { d7: '0.90%', d30: '1.20%', d60: '1.50%', d90: '1.80%' }, teamIncome: null },
+        { from: 1, to: 2, members: 7, minInvestment: 300, maxInvestment: 3000, tree: { l1: 3, l2: 4 }, incomeRates: { d7: '1.10%', d30: '1.40%', d60: '1.70%', d90: '2.00%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } },
+        { from: 2, to: 3, members: 18, minInvestment: 800, maxInvestment: 4000, tree: { l1: 8, l2: 10 }, incomeRates: { d7: '1.40%', d30: '1.70%', d60: '2.00%', d90: '2.40%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } },
+        { from: 3, to: 4, members: 50, minInvestment: 1300, maxInvestment: 5000, tree: { l1: 15, l2: 35 }, incomeRates: { d7: '1.80%', d30: '2.20%', d60: '2.70%', d90: '3.20%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } },
+        { from: 4, to: 5, members: 80, minInvestment: 2000, maxInvestment: 6000, tree: { l1: 30, l2: 50 }, incomeRates: { d7: '2.20%', d30: '2.60%', d60: '3.10%', d90: '3.70%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } },
+        { from: 5, to: 6, members: 140, minInvestment: 3000, maxInvestment: 7000, tree: { l1: 45, l2: 95 }, incomeRates: { d7: '2.70%', d30: '3.30%', d60: '4.00%', d90: '4.70%' }, teamIncome: { first: '10%', second: '7%', third: '4%' } }
     ];
 
     const TeamStructureTree = ({ l1, l2 }) => {
@@ -139,44 +139,83 @@ const LevelRequirements = () => {
                                         </div>
                                     )}
 
-                                    <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col items-center min-h-[160px]">
-                                            <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-3 self-start">
-                                                <Users size={12} className="text-primary" /> Team Structure
-                                            </div>
-                                            <TeamStructureTree l1={level.tree.l1} l2={level.tree.l2} />
-                                            <div className="mt-3 w-full bg-black/30 rounded-xl p-2 border border-white/5">
-                                                <div className="flex items-center justify-center gap-1.5 text-[10px] font-black">
-                                                    <span className="text-purple-400">A</span>
-                                                    <span className="text-white">{level.tree.l1}</span>
-                                                    <span className="text-white/20">|</span>
-                                                    <span className="text-pink-400">B+C</span>
-                                                    <span className="text-white">{level.tree.l2}</span>
-                                                    <span className="text-white/20">=</span>
-                                                    <span className={isCurrentLevel ? "text-primary" : "text-cyan-400"}>{level.members ? level.members : '∞'}</span>
+                                    {level.tree ? (
+                                        <div className="grid grid-cols-2 gap-3 mb-4">
+                                            <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col items-center min-h-[160px]">
+                                                <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-3 self-start">
+                                                    <Users size={12} className="text-primary" /> Team Structure
                                                 </div>
-                                            </div>
-                                            <div className="mt-2 text-[11px] text-white/60 font-bold">
-                                                Total: <span className={isCurrentLevel ? "text-primary" : "text-white"}>{currentTeam}</span> / {level.members ? level.members : '∞'}
-                                            </div>
-                                            <div className="mt-3 pt-3 border-t border-white/5 space-y-1 w-full text-[10px] font-bold text-white/30 uppercase tracking-tighter">
-                                                <div className="flex justify-between uppercase">
-                                                    <span>1st Gen:</span>
-                                                    <span className="text-primary">{level.teamIncome.first}</span>
+                                                <TeamStructureTree l1={level.tree.l1} l2={level.tree.l2} />
+                                                <div className="mt-3 w-full bg-black/30 rounded-xl p-2 border border-white/5">
+                                                    <div className="flex items-center justify-center gap-1.5 text-[10px] font-black">
+                                                        <span className="text-purple-400">A</span>
+                                                        <span className="text-white">{level.tree.l1}</span>
+                                                        <span className="text-white/20">|</span>
+                                                        <span className="text-pink-400">B+C</span>
+                                                        <span className="text-white">{level.tree.l2}</span>
+                                                        <span className="text-white/20">=</span>
+                                                        <span className={isCurrentLevel ? "text-primary" : "text-cyan-400"}>{level.members ? level.members : '∞'}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between uppercase">
-                                                    <span>2nd Gen:</span>
-                                                    <span className="text-primary">{level.teamIncome.second}</span>
+                                                <div className="mt-2 text-[11px] text-white/60 font-bold">
+                                                    Total: <span className={isCurrentLevel ? "text-primary" : "text-white"}>{currentTeam}</span> / {level.members ? level.members : '∞'}
                                                 </div>
-                                                <div className="flex justify-between uppercase">
-                                                    <span>3rd Gen:</span>
-                                                    <span className="text-primary">{level.teamIncome.third}</span>
+                                                {level.teamIncome && (
+                                                    <div className="mt-3 pt-3 border-t border-white/5 space-y-1 w-full text-[10px] font-bold text-white/30 uppercase tracking-tighter">
+                                                        <div className="flex justify-between uppercase">
+                                                            <span>1st Gen:</span>
+                                                            <span className="text-primary">{level.teamIncome.first}</span>
+                                                        </div>
+                                                        <div className="flex justify-between uppercase">
+                                                            <span>2nd Gen:</span>
+                                                            <span className="text-primary">{level.teamIncome.second}</span>
+                                                        </div>
+                                                        <div className="flex justify-between uppercase">
+                                                            <span>3rd Gen:</span>
+                                                            <span className="text-primary">{level.teamIncome.third}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-col gap-3">
+                                                <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col items-center justify-center flex-1">
+                                                    <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-2">
+                                                        <DollarSign size={12} className="text-primary" /> Investment
+                                                    </div>
+                                                    <div className="text-primary font-black text-sm italic">
+                                                        ${level.minInvestment} - ${level.maxInvestment}
+                                                    </div>
+                                                </div>
+                                                <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col justify-center flex-1">
+                                                    <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-3 justify-center">
+                                                        <DollarSign size={12} className="text-primary" /> Daily Income
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="text-[10px] text-white/40 font-black flex justify-between uppercase">
+                                                            <span>7 Days:</span>
+                                                            <span className="text-primary">{level.incomeRates.d7}</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-white/40 font-black flex justify-between uppercase">
+                                                            <span>30 Days:</span>
+                                                            <span className="text-primary">{level.incomeRates.d30}</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-white/40 font-black flex justify-between uppercase">
+                                                            <span>60 Days:</span>
+                                                            <span className="text-primary">{level.incomeRates.d60}</span>
+                                                        </div>
+                                                        <div className="text-[10px] text-white/40 font-black flex justify-between uppercase">
+                                                            <span>90 Days:</span>
+                                                            <span className="text-primary">{level.incomeRates.d90}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <div className="flex flex-col gap-3">
-                                            <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col items-center justify-center flex-1">
+                                    ) : (
+                                        /* Level 1: No team structure — show only Investment & Daily Income */
+                                        <div className="grid grid-cols-2 gap-3 mb-4">
+                                            <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col items-center justify-center">
                                                 <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-2">
                                                     <DollarSign size={12} className="text-primary" /> Investment
                                                 </div>
@@ -184,7 +223,7 @@ const LevelRequirements = () => {
                                                     ${level.minInvestment} - ${level.maxInvestment}
                                                 </div>
                                             </div>
-                                            <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col justify-center flex-1">
+                                            <div className="bg-white/5 rounded-3xl p-4 border border-white/5 flex flex-col justify-center">
                                                 <div className="flex items-center gap-1.5 text-white/40 text-[9px] font-black uppercase tracking-widest mb-3 justify-center">
                                                     <DollarSign size={12} className="text-primary" /> Daily Income
                                                 </div>
@@ -208,7 +247,7 @@ const LevelRequirements = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     <button
                                         onClick={() => (isCurrentLevel || currentLevel > level.from) && navigate('/lend', { state: { viewLevel: level.from } })}

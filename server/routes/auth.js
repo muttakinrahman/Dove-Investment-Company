@@ -462,19 +462,19 @@ router.get('/me', authMiddleware, async (req, res) => {
         const teamCount = directCount + secondGenReferrals.length;
 
         // Auto-Upgrade Logic (Check from highest level down)
+        // Level 1 (vipLevel 0) = no team needed (default)
+        // Level 2+ thresholds shifted: old L1(7)→L2, old L2(18)→L3, etc.
         let newLevel = user.vipLevel;
 
-        if (directCount >= 120) {
-            newLevel = 6;
-        } else if (directCount >= 90) {
+        if (directCount >= 140) {
             newLevel = 5;
-        } else if (directCount >= 72) {
+        } else if (directCount >= 80) {
             newLevel = 4;
-        } else if (directCount >= 48) {
+        } else if (directCount >= 50) {
             newLevel = 3;
-        } else if (directCount >= 24) {
+        } else if (directCount >= 18) {
             newLevel = 2;
-        } else if (directCount >= 12) {
+        } else if (directCount >= 7) {
             newLevel = 1;
         }
 

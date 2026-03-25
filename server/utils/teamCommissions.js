@@ -2,13 +2,15 @@ import User from '../models/User.js';
 import Commission from '../models/Commission.js';
 
 // Commission rates by VIP level [1st, 2nd, 3rd]
+// Level 1 (vipLevel 0) = No team bonus
+// Level 2-6 (vipLevel 1-5) = Fixed 10%/7%/4%
 const COMMISSION_RATES = {
-    0: [0.09, 0.06, 0.03],
+    0: [0, 0, 0],
     1: [0.10, 0.07, 0.04],
-    2: [0.11, 0.08, 0.05],
-    3: [0.12, 0.09, 0.06],
-    4: [0.13, 0.10, 0.07],
-    5: [0.14, 0.11, 0.08]
+    2: [0.10, 0.07, 0.04],
+    3: [0.10, 0.07, 0.04],
+    4: [0.10, 0.07, 0.04],
+    5: [0.10, 0.07, 0.04]
 };
 
 /**
