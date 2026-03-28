@@ -124,23 +124,16 @@ export async function distributeDailyTeamIncome(collector, collectedAmount) {
         const commissionAmount = collectedAmount * rate;
 
         if (commissionAmount > 0) {
-            // Auto-credit daily team income directly to referrer's balance
-            referrer.balance = (referrer.balance || 0) + commissionAmount;
-            referrer.teamIncome = (referrer.teamIncome || 0) + commissionAmount;
-            referrer.teamEarnings = (referrer.teamEarnings || 0) + commissionAmount;
-            await referrer.save();
-
-            // Save commission record as already claimed
+            // Save commission record as UNCLAIMED — user collects via Team Benefits
             const commissionRecord = await Commission.create({
                 fromUser: collector._id,
                 toUser: referrer._id,
                 amount: commissionAmount,
                 level: level,
-                investmentAmount: collectedAmount, // keeping collected amount as base
+                investmentAmount: collectedAmount,
                 percentage: rate * 100,
                 vipLevel: referrer.vipLevel,
-                claimed: true, // auto-credited
-                claimedAt: new Date()
+                claimed: false
             });
 
             // Notify the referrer
