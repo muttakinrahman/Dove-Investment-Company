@@ -91,11 +91,11 @@ const Me = () => {
     const LevelStatusCard = () => {
         const levelNum = currentLevel + 1;
         return (
-            <div className="relative w-full aspect-[1.5/1] sm:aspect-[2.2/1] bg-[#0d0d0d] rounded-[2.5rem] overflow-hidden border border-white/5 mb-6 group shadow-2xl">
+            <div className="relative w-full aspect-[1.5/1] sm:aspect-[2.2/1] bg-slate-800/80 dark:bg-dark-200 rounded-[2.5rem] overflow-hidden border border-white/20 mb-6 group shadow-2xl">
                 {/* 3D Animated Grid Background */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute inset-0" style={{
-                        backgroundImage: `radial-gradient(circle at 2px 2px, #333 1px, transparent 0)`,
+                        backgroundImage: `radial-gradient(circle at 2px 2px, #475569 1px, transparent 0)`,
                         backgroundSize: '24px 24px',
                     }}></div>
                 </div>
@@ -136,13 +136,13 @@ const Me = () => {
                         {/* My Team Button */}
                         <div
                             onClick={() => navigate('/my-team')}
-                            className="bg-[#1a1a1a] rounded-[1.5rem] p-4 sm:p-6 border border-white/5 cursor-pointer active:scale-95 transition-all flex items-center gap-3 group/team"
+                            className="bg-emerald-500/20 rounded-[1.5rem] p-4 sm:p-6 border border-emerald-500/40 cursor-pointer active:scale-95 transition-all flex items-center gap-3 group/team shadow-[0_0_20px_rgba(16,185,129,0.15)]"
                         >
                             <div className="relative flex-shrink-0">
-                                <Users size={28} className="sm:size-40 text-primary" />
-                                <div className="absolute inset-0 bg-primary/20 blur-md rounded-full opacity-0 group-hover/team:opacity-100 transition-opacity"></div>
+                                <Users size={28} className="sm:size-40 text-emerald-300" />
+                                <div className="absolute inset-0 bg-emerald-400/30 blur-md rounded-full opacity-0 group-hover/team:opacity-100 transition-opacity"></div>
                             </div>
-                            <span className="text-white/90 font-black text-[11px] sm:text-[14px] uppercase tracking-widest">My team</span>
+                            <span className="text-emerald-50 font-black text-[11px] sm:text-[14px] uppercase tracking-widest">My team</span>
                         </div>
 
                         {/* Upgrade Credit Button */}
@@ -162,9 +162,9 @@ const Me = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark-300 transition-colors duration-300 pb-20">
+        <div className="min-h-screen bg-white dark:bg-dark-300 transition-colors duration-300 pb-20">
             {/* Compact Header */}
-            <div className="bg-white/80 dark:bg-dark-200 backdrop-blur-xl pt-3 pb-4 border-b border-gray-200 dark:border-white/5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-colors">
+            <div className="bg-emerald-300/80 dark:bg-dark-200 backdrop-blur-xl pt-3 pb-4 border-b border-emerald-400 dark:border-white/5 shadow-[0_4px_30px_rgba(16,185,129,0.2)] transition-colors">
                 <div className="max-w-md mx-auto px-4">
                     {/* Profile Info Row */}
                     <div className="flex items-center justify-between mb-3 relative">
@@ -242,29 +242,29 @@ const Me = () => {
 
                     {/* Stats Grid */}
                     <div className="grid grid-cols-3 gap-1.5">
-                        <div className="glass-card p-2 bg-white dark:bg-dark-100 backdrop-blur-md border border-gray-100 dark:border-white/5 rounded-xl shadow-sm">
-                            <div className="text-gray-500 dark:text-white/40 text-[7px] uppercase mb-0.5">Balance</div>
-                            <div className="font-bold text-[10px] tracking-tight text-primary drop-shadow-sm">${user?.balance?.toFixed(2) || '0.00'}</div>
+                        <div className="glass-card p-2 bg-emerald-400/30 dark:bg-dark-100 backdrop-blur-md border border-emerald-500/30 dark:border-white/5 rounded-xl shadow-sm">
+                            <div className="text-emerald-950/90 dark:text-white/40 text-[7px] uppercase mb-0.5 font-bold">Balance</div>
+                            <div className="font-bold text-[10px] tracking-tight text-emerald-900 drop-shadow-sm">${user?.balance?.toFixed(2) || '0.00'}</div>
                         </div>
                         <div
                             onClick={() => navigate('/history')}
-                            className="glass-card p-2 bg-white dark:bg-dark-100 backdrop-blur-md cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border border-gray-100 dark:border-white/5 rounded-xl shadow-sm"
+                            className="glass-card p-2 bg-emerald-400/30 dark:bg-dark-100 backdrop-blur-md cursor-pointer hover:bg-emerald-500/40 dark:hover:bg-white/5 transition-colors border border-emerald-500/30 dark:border-white/5 rounded-xl shadow-sm"
                         >
-                            <div className="text-gray-500 dark:text-white/40 text-[7px] uppercase mb-0.5 flex items-center gap-1">
+                            <div className="text-emerald-950/90 dark:text-white/40 text-[7px] uppercase mb-0.5 flex items-center gap-1 font-bold">
                                 <History size={8} />
                                 History
                             </div>
-                            <div className="text-gray-800 dark:text-white/80 font-bold text-[10px]">View Detail</div>
+                            <div className="text-black font-bold text-[10px]">View Detail</div>
                         </div>
                         <div
                             onClick={() => navigate('/lend-funding')}
-                            className="glass-card p-2 bg-white dark:bg-dark-100 backdrop-blur-md cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border border-gray-100 dark:border-white/5 rounded-xl shadow-sm"
+                            className="glass-card p-2 bg-emerald-400/30 dark:bg-dark-100 backdrop-blur-md cursor-pointer hover:bg-emerald-500/40 dark:hover:bg-white/5 transition-colors border border-emerald-500/30 dark:border-white/5 rounded-xl shadow-sm"
                         >
-                            <div className="text-gray-500 dark:text-white/40 text-[7px] uppercase mb-0.5 flex items-center gap-1">
+                            <div className="text-emerald-950/90 dark:text-white/40 text-[7px] uppercase mb-0.5 flex items-center gap-1 font-bold">
                                 <Briefcase size={8} />
                                 Profits
                             </div>
-                            <div className="text-gray-800 dark:text-white/80 font-bold text-[10px]">Record</div>
+                            <div className="text-black font-bold text-[10px]">Record</div>
                         </div>
                     </div>
                 </div>
@@ -278,7 +278,7 @@ const Me = () => {
                 {/* Star Reward System Entry */}
                 <div
                     onClick={() => navigate('/star-rewards')}
-                    className="relative overflow-hidden bg-white dark:bg-dark-100 backdrop-blur-md rounded-3xl p-5 border border-gray-100 dark:border-white/5 group cursor-pointer active:scale-[0.98] transition-all shadow-sm dark:shadow-none"
+                    className="relative overflow-hidden bg-amber-300 dark:bg-amber-900/10 backdrop-blur-md rounded-3xl p-5 border border-amber-400 dark:border-white/5 group cursor-pointer active:scale-[0.98] transition-all shadow-sm shadow-amber-500/20 dark:shadow-none"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
                         <Star size={60} className="text-yellow-500" fill="currentColor" />
@@ -320,10 +320,10 @@ const Me = () => {
 
                 {/* Utility Options */}
                 <div className="space-y-3 pb-6">
-                    <div className="bg-white dark:bg-dark-100 backdrop-blur-md overflow-hidden border border-gray-100 dark:border-white/5 rounded-2xl shadow-sm">
+                    <div className="bg-emerald-300 dark:bg-emerald-900/10 backdrop-blur-md overflow-hidden border border-emerald-400 dark:border-white/5 rounded-2xl shadow-sm shadow-emerald-500/20">
                         <button
                             onClick={handleDownload}
-                            className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+                            className="w-full flex items-center justify-between px-4 py-4 hover:bg-emerald-400/30 transition-colors"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-primary/10 rounded-xl text-primary shadow-inner">
@@ -335,10 +335,10 @@ const Me = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white dark:bg-dark-100 backdrop-blur-md overflow-hidden border border-gray-100 dark:border-white/5 rounded-2xl shadow-sm">
+                    <div className="bg-rose-300 dark:bg-rose-900/10 backdrop-blur-md overflow-hidden border border-rose-400 dark:border-white/5 rounded-2xl shadow-sm shadow-rose-500/20">
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-between px-4 py-4 hover:bg-red-50 transition-colors"
+                            className="w-full flex items-center justify-between px-4 py-4 hover:bg-rose-400/30 transition-colors"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-red-100 dark:bg-red-500/10 rounded-xl text-red-500 shadow-inner">
