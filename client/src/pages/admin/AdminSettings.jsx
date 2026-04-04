@@ -208,7 +208,7 @@ const AdminSettings = () => {
                                 <ShieldCheck className="text-green-400" size={16} />
                                 <p className="text-green-400 text-xs">Wallet section is unlocked. Changes will be saved when you click "Save All Changes". Section will auto-lock after saving.</p>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
                                     <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">USDT (TRC20)</label>
                                     <input
@@ -217,28 +217,6 @@ const AdminSettings = () => {
                                         value={settings.walletTRC20}
                                         onChange={(e) => setSettings({ ...settings, walletTRC20: e.target.value })}
                                         placeholder="TRC20 wallet address"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">Bitcoin (BTC)</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-gray-50 dark:bg-dark-300 border border-green-500/30 rounded-lg p-2 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 font-mono text-sm"
-                                        value={settings.walletBTC}
-                                        onChange={(e) => setSettings({ ...settings, walletBTC: e.target.value })}
-                                        placeholder="BTC wallet address"
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">Ethereum (ETH)</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-gray-50 dark:bg-dark-300 border border-green-500/30 rounded-lg p-2 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 font-mono text-sm"
-                                        value={settings.walletETH}
-                                        onChange={(e) => setSettings({ ...settings, walletETH: e.target.value })}
-                                        placeholder="ETH wallet address"
                                     />
                                 </div>
                                 <div>
