@@ -28,7 +28,7 @@ const Withdraw = () => {
 
     const handleSendOtp = async () => {
         if (otpSending || countdown > 0) return;
-        
+
         setOtpSending(true);
         try {
             const token = localStorage.getItem('token');
@@ -70,7 +70,7 @@ const Withdraw = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (user?.twoFactorEnabled && !twoFactorToken) {
             return toast.error('Please enter 2FA verification code');
         }
@@ -201,7 +201,7 @@ const Withdraw = () => {
                                 required
                                 min="50"
                                 placeholder="0.00"
-                                className="w-full bg-[#a4f13a] border-none rounded-2xl py-4 pl-10 pr-4 text-black text-xl font-bold focus:outline-none transition-all placeholder:text-black/30"
+                                className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-10 pr-4 text-gray-900 dark:text-white text-xl font-bold focus:outline-none focus:border-primary focus:bg-dark-100 transition-all"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                             />
@@ -256,7 +256,7 @@ const Withdraw = () => {
                                 type="text"
                                 required
                                 placeholder="Paste your wallet address here"
-                                className="w-full bg-[#a4f13a] border-none rounded-xl p-3 text-black text-sm focus:outline-none font-mono placeholder:text-black/30"
+                                className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-xl p-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-primary font-mono"
                                 value={details.address}
                                 onChange={(e) => setDetails({ ...details, address: e.target.value })}
                             />
@@ -325,7 +325,7 @@ const Withdraw = () => {
                                 value={twoFactorToken}
                                 onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 placeholder="Enter 6-digit 2FA code"
-                                className="w-full bg-[#a4f13a] border-none rounded-xl px-4 py-3 text-black text-sm focus:outline-none transition-all placeholder:text-black/30"
+                                className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-primary transition-all"
                                 required
                             />
                             <p className="text-[10px] text-gray-900/40 dark:text-white/40 italic">

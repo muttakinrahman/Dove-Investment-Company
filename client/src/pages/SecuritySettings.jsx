@@ -72,7 +72,7 @@ const SecuritySettings = () => {
         try {
             const { data } = await axios.post('/api/2fa/setup');
             setTwoFactorData(data);
-            
+
             // Generate QR Code
             const url = await QRCode.toDataURL(data.otpauth_url);
             setQrCodeUrl(url);
@@ -169,7 +169,7 @@ const SecuritySettings = () => {
                             <p className="text-gray-900/60 dark:text-white/60 text-xs text-left">
                                 1. Scan this QR code in your Google Authenticator app:
                             </p>
-                            
+
                             <div className="bg-white p-2 rounded-lg inline-block mx-auto border-4 border-primary/20">
                                 <img src={qrCodeUrl} alt="2FA QR Code" className="w-40 h-40" />
                             </div>
@@ -178,7 +178,7 @@ const SecuritySettings = () => {
                                 <p className="text-gray-900/60 dark:text-white/60 text-xs">2. Or enter this code manually:</p>
                                 <div className="bg-black/20 p-2 rounded border border-slate-200 dark:border-white/5 flex items-center justify-between">
                                     <code className="text-primary font-mono text-sm">{twoFactorData.secret}</code>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(twoFactorData.secret);
                                             toast.info('Secret copied');
@@ -250,7 +250,7 @@ const SecuritySettings = () => {
                             onChange={handlePwdChange}
                             placeholder="New Password (min 6 chars)"
                             required
-                            className="w-full bg-[#a4f13a] border-none rounded-xl px-4 py-3 text-black text-sm focus:outline-none placeholder:text-black/40"
+                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
                         />
                         <input
                             type="password"
@@ -259,7 +259,7 @@ const SecuritySettings = () => {
                             onChange={handlePwdChange}
                             placeholder="Confirm New Password"
                             required
-                            className="w-full bg-[#a4f13a] border-none rounded-xl px-4 py-3 text-black text-sm focus:outline-none placeholder:text-black/40"
+                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
                         />
                         <button
                             type="submit"
@@ -286,7 +286,7 @@ const SecuritySettings = () => {
                             maxLength={6}
                             required
                             placeholder="New 6-Digit PIN"
-                            className="w-full bg-[#a4f13a] border-none rounded-xl px-4 py-3 text-black text-sm focus:outline-none placeholder:text-black/40"
+                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
                         />
                         <input
                             type="text"
@@ -296,7 +296,7 @@ const SecuritySettings = () => {
                             maxLength={6}
                             required
                             placeholder="Confirm New PIN"
-                            className="w-full bg-[#a4f13a] border-none rounded-xl px-4 py-3 text-black text-sm focus:outline-none placeholder:text-black/40"
+                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
                         />
                         <button
                             type="submit"

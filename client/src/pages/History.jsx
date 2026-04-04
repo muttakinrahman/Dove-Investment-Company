@@ -246,9 +246,9 @@ const History = () => {
                             </div>
                             <span className="text-gray-900 dark:text-white font-black text-sm">{data?.bonusIncome?.toFixed(0) || '0'}</span>
                         </div>
-                        <div className="flex justify-between items-center p-5 bg-[#a4f13a] border-t border-black/5">
-                            <span className="text-black font-black text-sm uppercase tracking-widest">Total Income</span>
-                            <span className="text-black font-black text-lg">{(Number(data?.interestIncome || 0) + Number(data?.teamIncome || 0) + Number(data?.bonusIncome || 0))?.toFixed(2)}</span>
+                        <div className="flex justify-between items-center p-5 bg-gradient-to-r from-primary/10 to-transparent border-t border-primary/20">
+                            <span className="text-primary font-black text-sm uppercase tracking-widest">Total Income</span>
+                            <span className="text-primary font-black text-lg">{(Number(data?.interestIncome || 0) + Number(data?.teamIncome || 0) + Number(data?.bonusIncome || 0))?.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
