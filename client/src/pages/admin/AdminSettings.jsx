@@ -52,7 +52,28 @@ const AdminSettings = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.put('/api/admin/settings', settings, {
+
+            // Build payload — only include wallet addresses if section is UNLOCKED
+            const payload = {
+                companyName: settings.companyName,
+                companyDescription: settings.companyDescription,
+                companyEmail: settings.companyEmail,
+                companyPhone: settings.companyPhone,
+                minWithdrawalAmount: settings.minWithdrawalAmount,
+                minDepositAmount: settings.minDepositAmount,
+                maintenanceMode: settings.maintenanceMode,
+                appDownloadUrl: settings.appDownloadUrl,
+            };
+
+            // Only include wallet addresses when explicitly unlocked
+            if (walletUnlocked) {
+                payload.walletTRC20 = settings.walletTRC20;
+                payload.walletBTC = settings.walletBTC;
+                payload.walletETH = settings.walletETH;
+                payload.walletBSC = settings.walletBSC;
+            }
+
+            await axios.put('/api/admin/settings', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Settings updated successfully');
