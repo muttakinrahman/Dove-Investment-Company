@@ -191,14 +191,14 @@ const SecuritySettings = () => {
                             </div>
 
                             <form onSubmit={enable2FA} className="space-y-3 pt-2">
-                                <input
-                                    type="text"
-                                    value={twoFactorToken}
-                                    onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                    placeholder="Enter 6-digit code"
-                                    className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-center tracking-[0.5em] font-bold text-lg focus:border-primary/50 focus:outline-none placeholder:tracking-normal placeholder:font-normal placeholder:text-sm placeholder:text-white/20"
-                                    required
-                                />
+                                    <input
+                                        type="text"
+                                        value={twoFactorToken}
+                                        onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        placeholder="Enter 6-digit code"
+                                        className="w-full bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-4 py-4 text-emerald-950 dark:text-emerald-400 text-center tracking-[0.5em] font-black text-2xl focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none placeholder:tracking-normal placeholder:font-normal placeholder:text-sm placeholder:text-gray-400 dark:placeholder:text-emerald-500/30 shadow-inner"
+                                        required
+                                    />
                                 <div className="flex gap-2">
                                     <button
                                         type="button"
@@ -250,7 +250,7 @@ const SecuritySettings = () => {
                             onChange={handlePwdChange}
                             placeholder="New Password (min 6 chars)"
                             required
-                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
+                            className="w-full bg-blue-50/50 dark:bg-blue-500/5 border border-blue-200/50 dark:border-blue-500/20 rounded-xl px-4 py-3.5 text-gray-900 dark:text-blue-100 text-sm focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-blue-500/30 transition-all"
                         />
                         <input
                             type="password"
@@ -259,7 +259,7 @@ const SecuritySettings = () => {
                             onChange={handlePwdChange}
                             placeholder="Confirm New Password"
                             required
-                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
+                            className="w-full bg-blue-50/50 dark:bg-blue-500/5 border border-blue-200/50 dark:border-blue-500/20 rounded-xl px-4 py-3.5 text-gray-900 dark:text-blue-100 text-sm focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-blue-500/30 transition-all"
                         />
                         <button
                             type="submit"
@@ -286,7 +286,7 @@ const SecuritySettings = () => {
                             maxLength={6}
                             required
                             placeholder="New 6-Digit PIN"
-                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
+                            className="w-full bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/20 rounded-xl px-4 py-3.5 text-gray-900 dark:text-amber-100 text-sm focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/10 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-amber-500/30 transition-all"
                         />
                         <input
                             type="text"
@@ -296,7 +296,7 @@ const SecuritySettings = () => {
                             maxLength={6}
                             required
                             placeholder="Confirm New PIN"
-                            className="w-full bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
+                            className="w-full bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/20 rounded-xl px-4 py-3.5 text-gray-900 dark:text-amber-100 text-sm focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/10 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-amber-500/30 transition-all"
                         />
                         <button
                             type="submit"
