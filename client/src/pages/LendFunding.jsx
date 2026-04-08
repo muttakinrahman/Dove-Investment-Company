@@ -106,13 +106,13 @@ const LendFunding = () => {
 
                                 {/* Financials */}
                                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className={`rounded-lg p-2.5 border ${index % 2 === 0 ? 'bg-teal-500/15 border-teal-400/20' : 'bg-violet-500/15 border-violet-400/20'}`}>
-                                        <div className={`text-[10px] uppercase mb-1 font-semibold ${index % 2 === 0 ? 'text-teal-400' : 'text-violet-400'}`}>Invested</div>
-                                        <div className={`font-bold text-sm ${index % 2 === 0 ? 'text-teal-100' : 'text-violet-100'}`}>${inv.package.investmentAmount}</div>
+                                    <div className={`rounded-lg p-2.5 shadow-md ${index % 2 === 0 ? 'bg-teal-500' : 'bg-violet-500'}`}>
+                                        <div className="text-[10px] uppercase mb-1 font-bold text-black/70">Invested</div>
+                                        <div className="font-black text-sm text-black">${inv.package.investmentAmount}</div>
                                     </div>
-                                    <div className={`rounded-lg p-2.5 border ${index % 2 === 0 ? 'bg-amber-500/15 border-amber-400/20' : 'bg-orange-500/15 border-orange-400/20'}`}>
-                                        <div className={`text-[10px] uppercase mb-1 font-semibold ${index % 2 === 0 ? 'text-amber-400' : 'text-orange-400'}`}>Total Earned</div>
-                                        <div className={`font-bold text-sm ${index % 2 === 0 ? 'text-amber-300' : 'text-orange-300'}`}>+${inv.totalEarned.toFixed(2)}</div>
+                                    <div className={`rounded-lg p-2.5 shadow-md ${index % 2 === 0 ? 'bg-amber-500' : 'bg-orange-500'}`}>
+                                        <div className="text-[10px] uppercase mb-1 font-bold text-black/70">Total Earned</div>
+                                        <div className="font-black text-sm text-black">+${inv.totalEarned.toFixed(2)}</div>
                                     </div>
                                 </div>
 
