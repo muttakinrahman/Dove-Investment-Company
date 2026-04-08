@@ -176,8 +176,8 @@ const Income = () => {
                         </div>
                     </div>
 
-                    {/* Bonus - Deep Rose */}
-                    <div className="bg-rose-600 rounded-2xl p-3 shadow-lg flex flex-col justify-between h-24 relative overflow-hidden border border-rose-500/20">
+                    {/* Bonus - Deep Violet */}
+                    <div className="bg-violet-600 rounded-2xl p-3 shadow-lg flex flex-col justify-between h-24 relative overflow-hidden border border-violet-500/20">
                         <div className="absolute top-2 right-2 text-white/20">
                             <ChevronRight size={14} />
                         </div>
@@ -196,7 +196,7 @@ const Income = () => {
                         </div>
                         <div className="flex items-start gap-2 mb-4">
                             <div className="w-10 h-8 bg-gray-100 dark:bg-black/40 rounded-lg flex items-center justify-center relative border border-slate-200 dark:border-white/5 transition-colors">
-                                <span className="text-[#a4f13a] font-bold text-lg">$</span>
+                                <span className="text-black font-bold text-lg">$</span>
                                 {/* Icon decoration */}
                                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#a4f13a] rounded-full"></div>
                             </div>
@@ -227,7 +227,7 @@ const Income = () => {
                         </div>
                         <div className="flex items-start gap-2 mb-4">
                             <div className="w-10 h-8 bg-gray-100 dark:bg-black/40 rounded-lg flex items-center justify-center relative border border-slate-200 dark:border-white/5 transition-colors">
-                                <span className="text-[#a4f13a] font-bold text-lg">$</span>
+                                <span className="text-black font-bold text-lg">$</span>
                                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#a4f13a] rounded-full"></div>
                             </div>
                             <div className="mt-1">
