@@ -204,7 +204,7 @@ const Income = () => {
                                 <span className="text-xs text-gray-400 block">Loan Income</span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white block">
                                     {incomeData.claimableCount} items
-                                    {incomeData.totalClaimable > 0 && <span className="text-[#a4f13a] ml-1">(${incomeData.totalClaimable.toFixed(2)})</span>}
+                                    {incomeData.totalClaimable > 0 && <span className="text-black dark:text-white ml-1">(${incomeData.totalClaimable.toFixed(2)})</span>}
                                 </span>
                             </div>
                         </div>
@@ -234,7 +234,7 @@ const Income = () => {
                                 <span className="text-xs text-gray-400 block">Team Benefits</span>
                                 <span className="text-sm font-bold text-gray-900 dark:text-white block">
                                     {teamBenefits.count} items
-                                    {teamBenefits.totalAmount > 0 && <span className="text-[#a4f13a] ml-1">(${teamBenefits.totalAmount.toFixed(2)})</span>}
+                                    {teamBenefits.totalAmount > 0 && <span className="text-black dark:text-white ml-1">(${teamBenefits.totalAmount.toFixed(2)})</span>}
                                 </span>
                             </div>
                         </div>
