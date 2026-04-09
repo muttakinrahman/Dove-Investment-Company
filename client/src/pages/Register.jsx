@@ -12,6 +12,7 @@ const Register = () => {
     const { register } = useAuth();
     const [formData, setFormData] = useState({
         fullName: '',
+        phone: '',
         email: '',
         otp: '',
         invitationCode: '',
@@ -118,7 +119,7 @@ const Register = () => {
         try {
             await register({
                 fullName: formData.fullName,
-                phone: formData.email,
+                phone: formData.phone,
                 email: formData.email,
                 password: formData.password,
                 invitationCode: formData.invitationCode,
@@ -183,6 +184,20 @@ const Register = () => {
                             value={formData.fullName}
                             onChange={handleChange}
                             placeholder="Please enter your full name"
+                            className="input-glass w-full"
+                            required
+                        />
+                    </div>
+
+                    {/* Phone Number */}
+                    <div>
+                        <label className="block text-gray-900/80 dark:text-white/80 text-sm mb-2">Phone Number</label>
+                        <input
+                            type="tel"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="Enter your phone number"
                             className="input-glass w-full"
                             required
                         />

@@ -10,10 +10,10 @@ const ProfileSettings = () => {
     const { user, updateUserInfo } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    // Initial state from user context - prefer email over phone
     const [formData, setFormData] = useState({
         fullName: user?.fullName || '',
-        phone: user?.email || user?.phone || ''
+        email: user?.email || '',
+        phone: user?.phone || ''
     });
 
     const handleChange = (e) => {
@@ -24,12 +24,10 @@ const ProfileSettings = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            // Prepare payload
-            // If input contains @, treat as email, else phone
-            const isEmail = formData.phone.includes('@');
             const payload = {
                 fullName: formData.fullName,
-                [isEmail ? 'email' : 'phone']: formData.phone
+                email: formData.email,
+                phone: formData.phone
             };
 
             const res = await axios.put('/api/auth/profile', payload);
@@ -74,22 +72,40 @@ const ProfileSettings = () => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-gray-900/60 dark:text-white/60 text-xs font-medium pl-1">Phone Number / Email</label>
+                    <label className="text-gray-900/60 dark:text-white/60 text-xs font-medium pl-1">Email Address</label>
                     <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/40 dark:text-white/40">
-                            {formData.phone.includes('@') ? <Mail size={18} /> : <Phone size={18} />}
+                            <Mail size={18} />
                         </div>
                         <input
-                            type="text"
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            readOnly={!!user?.email} // Optional: make email read-only if already set
+                            className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-xl px-10 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20 disabled:opacity-50"
+                            placeholder="Enter email address"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-1">
+                    <label className="text-gray-900/60 dark:text-white/60 text-xs font-medium pl-1">Phone Number</label>
+                    <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/40 dark:text-white/40">
+                            <Phone size={18} />
+                        </div>
+                        <input
+                            type="tel"
                             name="phone"
                             value={formData.phone}
                             onChange={handleChange}
                             className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-xl px-10 py-3 text-gray-900 dark:text-white text-sm focus:border-primary/50 focus:outline-none placeholder:text-white/20"
-                            placeholder="Phone number or Email"
+                            placeholder="Enter phone number"
                         />
                     </div>
                     <p className="text-gray-900/30 dark:text-white/30 text-[10px] pl-1">
-                        This will be used for your login.
+                        Add your phone number to show it in the My Team section.
                     </p>
                 </div>
 

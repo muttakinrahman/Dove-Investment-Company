@@ -116,7 +116,7 @@ const MyTeam = () => {
                                     </div>
                                     <div>
                                         <h4 className="text-gray-900 dark:text-white font-black text-sm tracking-tight">{member.fullName || 'Anonymous User'}</h4>
-                                        <p className="text-gray-900/30 dark:text-white/30 text-[10px] uppercase font-bold tracking-wider mt-0.5">+{member.phone}</p>
+                                        <p className="text-gray-900/30 dark:text-white/30 text-[10px] uppercase font-bold tracking-wider mt-0.5">{member.phone ? `+${member.phone}` : member.email || 'No contact info'}</p>
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1.5">

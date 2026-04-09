@@ -76,15 +76,14 @@ router.post('/register/send-otp', async (req, res) => {
 router.post('/register', async (req, res) => {
     try {
         log(`Registration attempt: ${JSON.stringify({ ...req.body, password: '[HIDDEN]' })}`);
-        const { password, invitationCode, fullName, email: reqEmail, otp } = req.body;
+        const { password, invitationCode, fullName, email: reqEmail, phone: reqPhone, otp } = req.body;
         
-        // We might receive phone instead of email from older frontend, so we handle both for backward compatibility initially,
-        // but new clients will send email
-        const identifier = reqEmail || req.body.phone;
-        const phone = identifier ? String(identifier).trim().toLowerCase() : '';
+        // We now cleanly separate email and phone
+        const email = reqEmail ? String(reqEmail).trim().toLowerCase() : '';
+        const phone = reqPhone ? String(reqPhone).trim() : '';
 
-        if (!phone) {
-            log('Error: Phone/Email missing');
+        if (!email) {
+            log('Error: Email missing');
             return res.status(400).json({ message: 'Email is required' });
         }
 
@@ -99,25 +98,32 @@ router.post('/register', async (req, res) => {
         }
 
         // NEW USERS MUST REGISTER WITH EMAIL ONLY
-        const isEmail = phone.includes('@');
-        log(`isEmail: ${isEmail}, Identifier: ${phone}`);
+        const isEmail = email.includes('@');
+        log(`isEmail: ${isEmail}, Email: ${email}`);
 
         if (!isEmail) {
             log('Error: Registration requires email address');
-            return res.status(400).json({ message: 'New registrations must use a Gmail address. Please provide an email instead of a phone number.' });
+            return res.status(400).json({ message: 'New registrations must use a Gmail address. Please provide a valid email.' });
         }
 
         // Verify OTP
-        const validOtp = await Otp.findOne({ email: phone, code: otp });
+        const validOtp = await Otp.findOne({ email: email, code: otp });
         if (!validOtp) {
             return res.status(400).json({ message: 'Invalid or expired verification code' });
         }
 
-        // Check if user already exists
-        const query = { email: phone };
-        const existingUser = await User.findOne(query);
+        // Check if user already exists with this email
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already registered' });
+        }
+        
+        // Check if user already exists with this phone (optional, but good practice since phone is unique)
+        if (phone) {
+            const existingPhone = await User.findOne({ phone });
+            if (existingPhone) {
+                return res.status(400).json({ message: 'Phone number already registered' });
+            }
         }
 
         // Verify invitation code if provided (optional)
@@ -143,10 +149,11 @@ router.post('/register', async (req, res) => {
         const lastUser = await User.findOne({}, 'memberId').sort({ memberId: -1 });
         const nextMemberId = (lastUser?.memberId || 0) + 1;
 
-        // Create user (email-only for new registrations)
+        // Create user
         const userData = {
             fullName,
-            email: phone.toLowerCase(),
+            phone,
+            email,
             password: hashedPassword,
             invitationCode: newInvitationCode,
             referredBy,
@@ -336,30 +343,21 @@ router.put('/profile', authMiddleware, async (req, res) => {
             user.fullName = fullName;
         }
 
-        // Handle Phone/Email update with uniqueness check
-        const newIdentifier = phone || email;
-        const isEmail = newIdentifier && newIdentifier.includes('@');
-
-        if (newIdentifier) {
-            // Check uniqueness across both phone and email fields
-            const existingUser = await User.findOne(
-                isEmail
-                    ? { email: newIdentifier.toLowerCase(), _id: { $ne: user._id } }
-                    : { phone: newIdentifier, _id: { $ne: user._id } }
-            );
-            if (existingUser) {
-                return res.status(400).json({ message: `This ${isEmail ? 'email' : 'phone number'} is already used by another account` });
+        // Handle Phone/Email update
+        if (email) {
+            const existingEmail = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
+            if (existingEmail) {
+                return res.status(400).json({ message: 'This email is already used by another account' });
             }
+            user.email = email.toLowerCase();
+        }
 
-            if (isEmail) {
-                user.email = newIdentifier.toLowerCase();
-                // Clear old phone so the new email becomes the primary identifier
-                user.phone = undefined;
-            } else {
-                user.phone = newIdentifier;
-                // Clear old email so the new phone becomes the primary identifier
-                user.email = undefined;
+        if (phone) {
+            const existingPhone = await User.findOne({ phone: phone, _id: { $ne: user._id } });
+            if (existingPhone) {
+                return res.status(400).json({ message: 'This phone number is already used by another account' });
             }
+            user.phone = phone;
         }
 
         await user.save();
