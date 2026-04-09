@@ -330,7 +330,7 @@ const Withdraw = () => {
                                 required
                                 min="50"
                                 placeholder="0.00"
-                                className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-10 pr-4 text-gray-900 dark:text-white text-xl font-bold focus:outline-none focus:border-primary focus:bg-dark-100 transition-all"
+                                className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-10 pr-4 text-gray-900 dark:text-white text-xl font-bold focus:outline-none focus:border-primary focus:bg-gray-50 dark:focus:bg-dark-100 transition-all"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                             />
