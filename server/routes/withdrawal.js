@@ -93,8 +93,9 @@ router.post('/request', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Minimum withdrawal amount is $50' });
         }
 
-        // Calculate 5% fee and total deduction
-        const fee = amount * 0.05;
+        // Calculate fee based on payment method: TRC20 = 10%, BSC = 5%
+        const feeRate = (paymentMethod === 'trc20') ? 0.10 : 0.05;
+        const fee = amount * feeRate;
         const totalAmount = amount + fee;
 
         // Check if user has sufficient balance for total deduction

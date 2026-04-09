@@ -92,6 +92,10 @@ const Withdraw = () => {
         setPaymentMethod(method);
     };
 
+    // Fee rate: TRC20 = 10%, BSC = 5%
+    const feeRate = paymentMethod === 'trc20' ? 0.10 : 0.05;
+    const feePercent = paymentMethod === 'trc20' ? '10%' : '5%';
+
     const handleSetMaxAmount = () => {
         if (eligibility) {
             setAmount(eligibility.maxWithdrawable > 0 ? String(eligibility.maxWithdrawable) : '0');
@@ -409,19 +413,19 @@ const Withdraw = () => {
                     {amount && Number(amount) >= 10 && (
                         <div className="glass-card p-4 space-y-2 border border-primary/10 bg-primary/5">
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-900/60 dark:text-white/60">Processing Fee (5%)</span>
-                                <span className="text-red-400 font-semibold">${(Number(amount) * 0.05).toFixed(2)}</span>
+                                <span className="text-gray-900/60 dark:text-white/60">Processing Fee ({feePercent})</span>
+                                <span className="text-red-400 font-semibold">${(Number(amount) * feeRate).toFixed(2)}</span>
                             </div>
                             <div className="h-px bg-gray-900/10 dark:bg-white/10 my-1"></div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-900 dark:text-white font-bold">Total Deduction</span>
-                                <span className="text-primary font-bold text-lg">${(Number(amount) * 1.05).toFixed(2)}</span>
+                                <span className="text-primary font-bold text-lg">${(Number(amount) * (1 + feeRate)).toFixed(2)}</span>
                             </div>
                             {!eligibility?.hasEnoughReferrals && (
                                 <div className="flex justify-between items-center text-[10px] pt-1">
                                     <span className="text-gray-900/50 dark:text-white/50">Balance After (min $50 reserve)</span>
-                                    <span className={`font-bold ${(user?.balance - Number(amount) * 1.05) < 50 ? 'text-red-400' : 'text-green-400'}`}>
-                                        ${(user?.balance - Number(amount) * 1.05).toFixed(2)}
+                                    <span className={`font-bold ${(user?.balance - Number(amount) * (1 + feeRate)) < 50 ? 'text-red-400' : 'text-green-400'}`}>
+                                        ${(user?.balance - Number(amount) * (1 + feeRate)).toFixed(2)}
                                     </span>
                                 </div>
                             )}
