@@ -61,14 +61,63 @@ router.get('/packages', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-
         const requestedVipLevel = req.query.vipLevel !== undefined ? parseInt(req.query.vipLevel) : (user.vipLevel || 0);
+
+        // ===== Level 1 Auto-Cancel Logic =====
+        // Only applies to Level 1 users (vipLevel === 0) viewing their own Level 1 packages.
+        // If their total funds (available balance + all active investment principals) < $50,
+        // cancel all active investments and return principal amounts to available balance.
+        let level1AutoCancelled = false;
+        let cancelledPackages = [];
+
+        if (user.vipLevel === 0 && requestedVipLevel === 0) {
+            // Calculate total active investment principal
+            const activeInvestments = user.investments.filter(inv => inv.status === 'active');
+            const totalLockedInLend = activeInvestments.reduce((sum, inv) => sum + (inv.package.investmentAmount || 0), 0);
+            const totalFunds = user.balance + totalLockedInLend;
+
+            if (totalFunds < 50 && activeInvestments.length > 0) {
+                // Cancel all active investments and refund principals
+                let refundTotal = 0;
+
+                user.investments.forEach(inv => {
+                    if (inv.status === 'active') {
+                        const principal = inv.package.investmentAmount || 0;
+                        inv.status = 'cancelled';
+                        user.balance += principal;
+                        refundTotal += principal;
+                        cancelledPackages.push(inv.package.name);
+                        console.log(`[Level1-AutoCancel] Cancelled ${inv.package.name} ($${principal}) for user ${user.phone || user.email}`);
+                    }
+                });
+
+                await user.save();
+                level1AutoCancelled = true;
+
+                // Send notification to user
+                await createNotification({
+                    userId: user._id,
+                    title: 'Investment Cancelled – Low Balance',
+                    message: `Your active lend package(s) (${cancelledPackages.join(', ')}) have been cancelled and $${refundTotal.toFixed(2)} has been returned to your available balance because your total balance dropped below $50. Please deposit more to restart lending.`,
+                    type: 'investment',
+                    amount: refundTotal
+                });
+
+                console.log(`[Level1-AutoCancel] Refunded $${refundTotal.toFixed(2)} to user ${user.phone || user.email}. New balance: $${user.balance.toFixed(2)}`);
+            }
+        }
 
         const packages = await Package.find({
             isActive: true,
             vipLevel: requestedVipLevel
         }).sort({ duration: 1 });
-        res.json(packages);
+
+        res.json({
+            packages,
+            level1AutoCancelled,
+            cancelledPackages,
+            newBalance: user.balance
+        });
     } catch (error) {
         console.error('Get packages error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -117,16 +166,20 @@ router.post('/create', authMiddleware, async (req, res) => {
         const user = await User.findById(req.userId);
 
         // ===== Level 1 (vipLevel 0) Minimum Balance Check =====
-        // Level 1 users must have at least $50 available balance to invest in lend packages.
-        // If their balance is below $50, they need to deposit more first.
+        // Level 1 users must have at least $50 TOTAL funds (available balance + active invest packages)
+        // If their total funds are below $50, they cannot lend and must deposit more.
         if (user.vipLevel === 0) {
-            if (user.balance < 50) {
+            const activePrincipal = user.investments
+                .filter(inv => inv.status === 'active')
+                .reduce((sum, inv) => sum + (inv.package?.investmentAmount || 0), 0);
+            const totalFunds = user.balance + activePrincipal;
+
+            if (totalFunds < 50) {
                 return res.status(400).json({
-                    message: 'Your available balance is below $50. Please deposit more funds to start lending. Minimum $50 balance required for Level 1 investments.',
+                    message: 'Your total balance is below $50. Please deposit more funds to start lending. Minimum $50 balance required for Level 1 investments.',
                     code: 'LEVEL1_LOW_BALANCE'
                 });
             }
-            // Also ensure balance won't drop below $0 after investment (standard check still applies below)
         }
 
         // Check for existing active investment of the same package

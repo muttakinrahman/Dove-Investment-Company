@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Info, TrendingUp, Calendar, DollarSign, Bell, HelpCircle } from 'lucide-react';
+import { ChevronLeft, Info, TrendingUp, Calendar, DollarSign, Bell, HelpCircle, AlertCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import axios from 'axios';
@@ -47,6 +47,7 @@ const Lend = () => {
     const [showInvestModal, setShowInvestModal] = useState(null);
     const [investAmount, setInvestAmount] = useState('');
     const [showSuccess, setShowSuccess] = useState(false);
+    const [autoCancelInfo, setAutoCancelInfo] = useState(null); // { cancelled: [], refunded: balance }
 
     // Determine which level to show: active state or current user level
     const targetLevel = location.state?.viewLevel !== undefined ? location.state.viewLevel : (user?.vipLevel || 0);
@@ -59,7 +60,33 @@ const Lend = () => {
                     headers: { Authorization: `Bearer ${token}` },
                     params: { vipLevel: targetLevel }
                 });
-                setPackages(response.data);
+
+                const data = response.data;
+
+                // Handle new response format with Level 1 auto-cancel info
+                if (data.packages !== undefined) {
+                    setPackages(data.packages);
+
+                    // If Level 1 auto-cancel happened, show alert and refresh user
+                    if (data.level1AutoCancelled && data.cancelledPackages?.length > 0) {
+                        setAutoCancelInfo({
+                            cancelled: data.cancelledPackages,
+                            newBalance: data.newBalance
+                        });
+
+                        // Refresh user session so balance updates in UI
+                        try {
+                            const userRes = await axios.get('/api/auth/me', {
+                                headers: { Authorization: `Bearer ${token}` }
+                            });
+                            if (userRes.data) login(token, userRes.data);
+                        } catch (_) { /* silent */ }
+                    }
+                } else {
+                    // Fallback for old format
+                    setPackages(data);
+                }
+
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching packages:', err);
@@ -156,8 +183,36 @@ const Lend = () => {
             {/* Content */}
             <div className="max-w-md mx-auto px-4 py-4 space-y-4">
 
-                {/* Level 1 Low Balance Warning */}
-                {user?.vipLevel === 0 && (user?.balance || 0) < 50 && targetLevel === 0 && (
+                {/* Level 1 Auto-Cancel Alert — shown when packages were cancelled due to low balance */}
+                {autoCancelInfo && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-sm flex items-start gap-3">
+                        <AlertCircle size={22} className="mt-0.5 shrink-0 text-red-400" />
+                        <div>
+                            <p className="font-bold text-xs mb-1 text-red-400">⚠️ Investment Cancelled – Low Balance</p>
+                            <p className="text-[11px] leading-relaxed opacity-90">
+                                Your lend package(s) <strong>({autoCancelInfo.cancelled.join(', ')})</strong> have been automatically cancelled because your total balance dropped below <strong>$50.00</strong>. Your invested amount has been returned to your available balance (<strong>${(autoCancelInfo.newBalance || 0).toFixed(2)}</strong>).
+                            </p>
+                            <p className="text-[10px] mt-1.5 opacity-70">Please deposit more funds to restart lending.</p>
+                            <div className="flex gap-2 mt-3">
+                                <button
+                                    onClick={() => navigate('/recharge')}
+                                    className="px-5 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-[11px] font-bold hover:bg-red-500/30 transition-all active:scale-[0.97]"
+                                >
+                                    Deposit Now →
+                                </button>
+                                <button
+                                    onClick={() => setAutoCancelInfo(null)}
+                                    className="px-4 py-2 text-red-400/60 text-[11px] font-medium hover:text-red-400 transition-colors"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Level 1 Low Balance Warning (ongoing) */}
+                {user?.vipLevel === 0 && (user?.balance || 0) < 50 && targetLevel === 0 && !autoCancelInfo && (
                     <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-500 text-sm flex items-start gap-3 animate-pulse-slow">
                         <DollarSign size={22} className="mt-0.5 shrink-0" />
                         <div>
