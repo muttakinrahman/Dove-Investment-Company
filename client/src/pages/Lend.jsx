@@ -213,16 +213,16 @@ const Lend = () => {
 
                 {/* Level 1 Low Balance Warning (ongoing) */}
                 {user?.vipLevel === 0 && (user?.balance || 0) < 50 && targetLevel === 0 && !autoCancelInfo && (
-                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-500 text-sm flex items-start gap-3 animate-pulse-slow">
-                        <DollarSign size={22} className="mt-0.5 shrink-0" />
+                    <div className="p-4 bg-gradient-to-br from-amber-600 to-orange-600 rounded-2xl text-white shadow-lg shadow-orange-500/20 flex items-start gap-3 animate-pulse-slow">
+                        <DollarSign size={22} className="mt-0.5 shrink-0 opacity-90" />
                         <div>
                             <p className="font-bold text-xs mb-1">⚠️ Insufficient Balance for Lending</p>
-                            <p className="text-[11px] leading-relaxed opacity-80">
+                            <p className="text-[11px] leading-relaxed opacity-90">
                                 Your available balance is <strong>${(user?.balance || 0).toFixed(2)}</strong>, which is below the required <strong>$50.00</strong> minimum for Level 1 investments. Please deposit more funds to start lending.
                             </p>
                             <button
                                 onClick={() => navigate('/recharge')}
-                                className="mt-3 px-5 py-2 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-[11px] font-bold hover:bg-amber-500/30 transition-all active:scale-[0.97]"
+                                className="mt-3 px-5 py-2 bg-white text-orange-600 rounded-full text-[11px] font-bold hover:bg-orange-50 transition-all shadow-sm active:scale-[0.97]"
                             >
                                 Deposit Now →
                             </button>
