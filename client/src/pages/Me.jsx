@@ -244,7 +244,7 @@ const Me = () => {
                     <div className="grid grid-cols-3 gap-1.5">
                         <div className="glass-card p-2 bg-emerald-400/30 dark:bg-dark-100 backdrop-blur-md border border-emerald-500/30 dark:border-white/5 rounded-xl shadow-sm">
                             <div className="text-emerald-950/90 dark:text-white/40 text-[7px] uppercase mb-0.5 font-bold">Balance</div>
-                            <div className="font-bold text-[10px] tracking-tight text-emerald-900 drop-shadow-sm">${user?.balance?.toFixed(2) || '0.00'}</div>
+                            <div className="font-bold text-[10px] tracking-tight text-emerald-900 dark:text-emerald-400 drop-shadow-sm">${user?.balance?.toFixed(2) || '0.00'}</div>
                         </div>
                         <div
                             onClick={() => navigate('/history')}
@@ -254,7 +254,7 @@ const Me = () => {
                                 <History size={8} />
                                 History
                             </div>
-                            <div className="text-black font-bold text-[10px]">View Detail</div>
+                            <div className="text-black dark:text-white font-bold text-[10px]">View Detail</div>
                         </div>
                         <div
                             onClick={() => navigate('/lend-funding')}
@@ -264,7 +264,7 @@ const Me = () => {
                                 <Briefcase size={8} />
                                 Profits
                             </div>
-                            <div className="text-black font-bold text-[10px]">Record</div>
+                            <div className="text-black dark:text-white font-bold text-[10px]">Record</div>
                         </div>
                     </div>
                 </div>
