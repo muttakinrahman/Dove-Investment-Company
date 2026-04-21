@@ -531,8 +531,9 @@ router.get('/me', authMiddleware, async (req, res) => {
         }
         console.log(`[LevelCheck] Result: newLevel=${newLevel} (was ${user.vipLevel})`);
 
-        // Apply upgrade if level increased
-        if (newLevel > user.vipLevel) {
+        // Apply correct level (upgrade OR fix incorrect level from DB)
+        if (newLevel !== user.vipLevel) {
+            console.log(`[LevelCheck] Updating vipLevel: ${user.vipLevel} → ${newLevel}`);
             user.vipLevel = newLevel;
             await user.save();
         }
