@@ -514,18 +514,22 @@ router.get('/me', authMiddleware, async (req, res) => {
             { level: 2, gen1Min: 3,  gen23Min: 4,  totalMin: 7,   minDeposit: 300  }
         ];
 
+        console.log(`[LevelCheck] User: ${user.email || user.phone} | vipLevel: ${user.vipLevel}`);
+        console.log(`[LevelCheck] gen1Active: ${gen1ActiveCount}, gen23Active: ${gen23ActiveCount}, totalActive: ${totalActiveCount}, totalDeposited: $${totalDeposited}`);
+
         let newLevel = user.vipLevel;
         for (const req of levelUpRequirements) {
-            if (
-                gen1ActiveCount >= req.gen1Min &&
-                gen23ActiveCount >= req.gen23Min &&
-                totalActiveCount >= req.totalMin &&
-                totalDeposited >= req.minDeposit
-            ) {
+            const g1ok = gen1ActiveCount >= req.gen1Min;
+            const g23ok = gen23ActiveCount >= req.gen23Min;
+            const totok = totalActiveCount >= req.totalMin;
+            const depok = totalDeposited >= req.minDeposit;
+            console.log(`[LevelCheck] → Level ${req.level}: gen1(${gen1ActiveCount}>=${req.gen1Min}=${g1ok}), gen23(${gen23ActiveCount}>=${req.gen23Min}=${g23ok}), total(${totalActiveCount}>=${req.totalMin}=${totok}), dep($${totalDeposited}>=$${req.minDeposit}=${depok})`);
+            if (g1ok && g23ok && totok && depok) {
                 newLevel = req.level;
                 break;
             }
         }
+        console.log(`[LevelCheck] Result: newLevel=${newLevel} (was ${user.vipLevel})`);
 
         // Apply upgrade if level increased
         if (newLevel > user.vipLevel) {
@@ -603,6 +607,9 @@ router.get('/me', authMiddleware, async (req, res) => {
             stats: {
                 directResults: directCount,
                 teamMembers: teamCount,
+                activeTeamMembers: totalActiveCount,
+                gen1ActiveCount: gen1ActiveCount,
+                gen23ActiveCount: gen23ActiveCount,
                 activeInvestments: user.investments?.filter(i => i.status === 'active').length || 0,
                 totalInvested: user.investments?.reduce((sum, i) => sum + i.package.investmentAmount, 0) || 0,
                 totalDeposited: totalDeposited

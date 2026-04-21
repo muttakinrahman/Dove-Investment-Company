@@ -14,7 +14,7 @@ const LevelRequirements = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const currentLevel = user?.vipLevel || 0;
-    const currentTeam = user?.stats?.teamMembers || 0;
+    const currentTeam = user?.stats?.activeTeamMembers || 0;
     const totalDeposited = user?.stats?.totalDeposited || 0;
 
     const levelRequirements = [
