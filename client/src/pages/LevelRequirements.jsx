@@ -67,7 +67,7 @@ const LevelRequirements = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-300 pb-24">
             {/* Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-dark-300/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/5">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-dark-300 border-b border-slate-200 dark:border-white/5">
                 <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
                     <button
                         onClick={() => navigate('/me')}
