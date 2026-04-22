@@ -409,12 +409,24 @@ router.post('/approve/:id', async (req, res) => {
         if (!deposit) return res.status(404).json({ message: 'Deposit not found' });
         if (deposit.status === 'approved') return res.status(400).json({ message: 'Already approved' });
 
+        // Admin can pass actualAmount to override the requested amount
+        // This handles cases where user sent less or more than they entered
+        const { actualAmount } = req.body;
+        if (actualAmount !== undefined) {
+            const parsed = parseFloat(actualAmount);
+            if (isNaN(parsed) || parsed <= 0) {
+                return res.status(400).json({ message: 'Invalid actualAmount' });
+            }
+            console.log(`[Admin Approve] Amount override: $${deposit.amount} → $${parsed} for deposit ${deposit._id}`);
+            deposit.amount = parsed;
+        }
+
         deposit.status     = 'approved';
         deposit.approvedAt = new Date();
         await deposit.save();
         await creditUserBalance(deposit);
 
-        res.json({ message: 'Deposit approved' });
+        res.json({ message: 'Deposit approved', creditedAmount: deposit.amount });
     } catch (err) {
         console.error('[Approve]', err.message);
         res.status(500).json({ message: 'Server error' });
