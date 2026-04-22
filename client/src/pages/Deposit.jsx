@@ -173,7 +173,7 @@ export default function Deposit() {
         <h2 className="text-gray-900 dark:text-white text-2xl font-bold mb-2">{autoMode?'Payment Confirmed!':'Deposit Submitted!'}</h2>
         <p className="text-gray-500 dark:text-white/50 text-sm mb-6">{autoMode?'Your balance has been credited automatically.':'Under review — usually 10-30 minutes.'}</p>
         <div className="glass-card p-4 text-left mb-6 max-w-xs mx-auto space-y-2">
-          {[['Amount',`${amount} USDT`],['Network',net],['Method',autoMode?'Auto (NowPayments)':'Manual'],['Status',autoMode?'Confirmed':'Pending']].map(([k,v])=>(
+          {[['Amount',`${amount} USDT`],['Network',net],['Method',autoMode?'Auto':'Manual'],['Status',autoMode?'Confirmed':'Pending']].map(([k,v])=>(
             <div key={k} className="flex justify-between text-xs"><span className="text-gray-500 dark:text-white/40">{k}</span><span className="text-gray-900 dark:text-white font-medium">{v}</span></div>
           ))}
         </div>
@@ -251,7 +251,7 @@ export default function Deposit() {
             <button onClick={autoMode&&npApi?handleAutoCreate:()=>setStep(1)}
               disabled={submitting||(autoMode&&!npApi)}
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-cyan-400 text-black font-bold text-sm disabled:opacity-60 flex items-center justify-center gap-2">
-              {submitting?<><Loader size={16} className="animate-spin"/>Creating Payment...</>:autoMode?'Generate Payment Address →':'Continue to Submit →'}
+              {submitting?<><Loader size={16} className="animate-spin"/>Processing...</>:'Generate Payment Address'}
             </button>
           </div>
         )}
