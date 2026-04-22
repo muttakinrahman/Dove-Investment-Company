@@ -32,12 +32,12 @@ export const createPayment = async ({ amount, network, orderId, orderDescription
 
     const body = {
         price_amount:     parseFloat(amount),
-        price_currency:   'usd',
+        price_currency:   pay_currency,   // same as pay_currency → no conversion, exact amount
         pay_currency,
         order_id:         String(orderId),
         order_description: orderDescription || `Deposit ${amount} USDT`,
         ipn_callback_url:  `${process.env.SERVER_URL || 'https://doveinvestment.cloud'}/api/recharge/nowpayments/webhook`,
-        is_fixed_rate:     false,
+        is_fixed_rate:     true,
         is_fee_paid_by_user: false,
     };
 
