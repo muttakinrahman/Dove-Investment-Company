@@ -39,6 +39,11 @@ if (!fs.existsSync(profileDir)) {
 
 // Middleware
 app.use(cors());
+
+// ⚡ NowPayments IPN webhook needs raw body for HMAC verification
+app.use('/api/recharge/nowpayments/webhook', express.raw({ type: 'application/json' }));
+
+// All other routes use JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

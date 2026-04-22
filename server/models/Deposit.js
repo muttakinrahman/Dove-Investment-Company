@@ -12,8 +12,8 @@ const depositSchema = new mongoose.Schema({
     },
     transactionHash: {
         type: String,
-        required: true,
-        unique: true
+        unique: true,
+        sparse: true   // allow null for auto-payment (hash set after confirmation)
     },
     network: {
         type: String,
@@ -29,8 +29,35 @@ const depositSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected'],
+        enum: ['pending', 'approved', 'rejected', 'waiting', 'confirming', 'expired'],
         default: 'pending'
+    },
+    // Payment method: 'manual' (user submits TxHash) or 'auto' (NowPayments)
+    paymentMethod: {
+        type: String,
+        enum: ['manual', 'auto'],
+        default: 'manual'
+    },
+    // NowPayments auto-payment fields
+    nowpaymentsId: {
+        type: String,
+        default: null
+    },
+    nowpaymentsStatus: {
+        type: String,
+        default: null
+    },
+    payAddress: {
+        type: String,
+        default: null
+    },
+    payCurrency: {
+        type: String,
+        default: null
+    },
+    payAmount: {
+        type: Number,
+        default: null
     },
     approvedAt: {
         type: Date
@@ -42,3 +69,4 @@ const depositSchema = new mongoose.Schema({
 const Deposit = mongoose.model('Deposit', depositSchema);
 
 export default Deposit;
+
