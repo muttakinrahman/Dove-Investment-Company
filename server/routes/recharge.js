@@ -9,6 +9,20 @@ import { sendDepositApprovedEmail, sendDepositReceivedEmail } from '../services/
 
 const router = express.Router();
 
+// Get Deposit History (for logged-in user)
+router.get('/history', authMiddleware, async (req, res) => {
+    try {
+        const deposits = await Deposit.find({ userId: req.userId })
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .select('amount network status transactionHash createdAt approvedAt packageName');
+        res.json({ deposits });
+    } catch (error) {
+        console.error('Deposit history error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get Wallet Addresses
 router.get('/wallets', async (req, res) => {
     try {
@@ -160,7 +174,7 @@ router.post('/approve/:id', async (req, res) => {
             await sendDepositApprovedEmail(user, deposit);
         }
 
-        res.json({ message: 'Deposit approved and processed', package: matchingPackage ? matchingPackage.name : 'None' });
+        res.json({ message: 'Deposit approved and processed' });
 
     } catch (error) {
         console.error('Approve deposit error:', error);
