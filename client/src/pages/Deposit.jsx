@@ -43,13 +43,39 @@ export default function Deposit() {
   const [done, setDone] = useState(false);
   const [history, setHistory] = useState([]);
   // Auto-pay state
-  const [payInfo, setPayInfo] = useState(null); // {payAddress,payCurrency,payAmount,depositId,paymentId}
+  const [payInfo, setPayInfo] = useState(null);
   const [payStatus, setPayStatus] = useState(null);
   const pollRef = useRef(null);
+  const timerRef = useRef(null);
+  const [timeLeft, setTimeLeft] = useState(0); // seconds remaining
+  const PAYMENT_TIMEOUT = 15 * 60; // 15 minutes
 
   const token = () => localStorage.getItem('token');
   const curNet = NETWORKS.find(n=>n.id===net);
   const curAddr = autoMode ? payInfo?.payAddress : wallets[net];
+
+  // Restore active payment from localStorage on mount
+  useEffect(()=>{
+    const saved = localStorage.getItem('activePayment');
+    if(saved){
+      try{
+        const p = JSON.parse(saved);
+        const elapsed = Math.floor((Date.now() - p.createdAt) / 1000);
+        const remaining = PAYMENT_TIMEOUT - elapsed;
+        if(remaining > 0 && p.payInfo){
+          setPayInfo(p.payInfo);
+          setAmount(p.amount);
+          setNet(p.network || 'BSC');
+          setAutoMode(true);
+          setPayStatus('waiting');
+          setTimeLeft(remaining);
+          setStep(1);
+        } else {
+          localStorage.removeItem('activePayment');
+        }
+      }catch{ localStorage.removeItem('activePayment'); }
+    }
+  },[]);
 
   useEffect(()=>{
     axios.get('/api/recharge/wallets').then(r=>{
@@ -70,19 +96,34 @@ export default function Deposit() {
     else setQr('');
   },[curAddr,net]);
 
+  // Countdown timer
+  useEffect(()=>{
+    if(step===1 && autoMode && timeLeft > 0 && payStatus!=='approved'){
+      timerRef.current = setInterval(()=>{
+        setTimeLeft(prev=>{
+          if(prev <= 1){ clearInterval(timerRef.current); setPayStatus('expired'); localStorage.removeItem('activePayment'); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return()=>clearInterval(timerRef.current);
+  },[step, autoMode, payStatus]);
+
   // Poll payment status every 8s
   useEffect(()=>{
-    if(step===1&&autoMode&&payInfo?.depositId&&payStatus!=='approved'){
+    if(step===1&&autoMode&&payInfo?.depositId&&payStatus!=='approved'&&payStatus!=='expired'){
       pollRef.current=setInterval(async()=>{
         try{
           const r=await axios.get(`/api/recharge/payment-status/${payInfo.depositId}`,{headers:{Authorization:`Bearer ${token()}`}});
           setPayStatus(r.data.status);
-          if(r.data.status==='approved'){ clearInterval(pollRef.current); setDone(true); fetchHistory(); }
+          if(r.data.status==='approved'){ clearInterval(pollRef.current); clearInterval(timerRef.current); localStorage.removeItem('activePayment'); setDone(true); fetchHistory(); }
         }catch{}
       },8000);
     }
     return()=>clearInterval(pollRef.current);
-  },[step,payInfo,autoMode]);
+  },[step,payInfo,autoMode,payStatus]);
+
+  const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
   const copy = (addr)=>{ navigator.clipboard.writeText(addr); setCopied(true); toast.success('Copied!',{autoClose:1500}); setTimeout(()=>setCopied(false),2000); };
 
@@ -102,7 +143,10 @@ export default function Deposit() {
       const r=await axios.post('/api/recharge/create-payment',{amount:parseFloat(amount),network:net,packageId:pkgInfo?.packageId,packageName:pkgInfo?.packageName},{headers:{Authorization:`Bearer ${token()}`}});
       setPayInfo(r.data);
       setPayStatus('waiting');
+      setTimeLeft(PAYMENT_TIMEOUT);
       setStep(1);
+      // Save to localStorage for persistence
+      localStorage.setItem('activePayment', JSON.stringify({ payInfo: r.data, amount, network: net, createdAt: Date.now() }));
     }catch(e){ toast.error(e.response?.data?.message||'Failed to create payment'); }
     finally{ setSubmitting(false); }
   };
@@ -134,7 +178,7 @@ export default function Deposit() {
           ))}
         </div>
         <button onClick={()=>navigate('/home')} className="w-full max-w-xs py-3 rounded-xl bg-gradient-to-r from-primary to-cyan-400 text-black font-bold mb-2">Back to Home</button>
-        <button onClick={()=>{setDone(false);setStep(0);setPayInfo(null);setTxHash('');setAmount(pkgInfo?.minAmount||'');}} className="w-full max-w-xs py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50 text-sm">New Deposit</button>
+        <button onClick={()=>{setDone(false);setStep(0);setPayInfo(null);setPayStatus(null);setTimeLeft(0);setTxHash('');setAmount(pkgInfo?.minAmount||'');localStorage.removeItem('activePayment');}} className="w-full max-w-xs py-3 rounded-xl border border-gray-200 dark:border-white/10 text-gray-500 dark:text-white/50 text-sm">New Deposit</button>
       </div>
       <BottomNav/>
     </div>
@@ -216,7 +260,7 @@ export default function Deposit() {
               <input type="number" value={amount} onChange={e=>setAmount(e.target.value)} placeholder={`Min: ${minDeposit}`}
                 className="w-full bg-transparent text-gray-900 dark:text-white text-xl font-bold placeholder-gray-300 dark:placeholder-white/20 focus:outline-none"/>
               <div className="h-px bg-gray-200 dark:bg-white/10 mt-2"/>
-              <p className="text-gray-400 dark:text-white/30 text-xs mt-2">Min deposit: <span className="text-primary">{minDeposit} USDT</span></p>
+              <p className="text-gray-400 dark:text-white/30 text-xs mt-2">Min deposit: <span className="text-primary">{autoMode ? '3' : minDeposit} USDT</span></p>
             </div>
 
             <button onClick={autoMode&&npApi?handleAutoCreate:()=>setStep(1)}
@@ -232,15 +276,20 @@ export default function Deposit() {
           <div className="space-y-4 animate-fade-in">
             {autoMode&&payInfo?(
               <>
-                {/* Status banner */}
+                {/* Timer + Status banner */}
+                <div className="flex items-center justify-center gap-3 mb-1">
+                  <div className={`w-16 h-16 rounded-full flex flex-col items-center justify-center border-2 ${timeLeft<120?'border-red-500 text-red-400':timeLeft<300?'border-amber-500 text-amber-400':'border-primary text-primary'}`}>
+                    <Clock size={14} className="mb-0.5"/>
+                    <span className="text-sm font-bold font-mono">{formatTime(timeLeft)}</span>
+                  </div>
+                </div>
                 <div className={`flex items-center gap-2 p-3 rounded-xl border text-sm font-semibold
                   ${payStatus==='approved'?'bg-emerald-500/15 border-emerald-500/30 text-emerald-400':
                     payStatus==='confirming'?'bg-blue-500/15 border-blue-500/30 text-blue-400':
                     payStatus==='expired'?'bg-red-500/15 border-red-500/30 text-red-400':
                     'bg-amber-500/15 border-amber-500/30 text-amber-400'}`}>
                   {payStatus==='approved'?<CheckCircle2 size={16}/>:payStatus==='expired'?<AlertCircle size={16}/>:<Loader size={16} className="animate-spin"/>}
-                  {payStatus==='approved'?'Payment Confirmed!':payStatus==='confirming'?'Confirming on blockchain...':payStatus==='expired'?'Payment Expired':'Waiting for your payment…'}
-                  <RefreshCw size={13} className="ml-auto cursor-pointer opacity-50" onClick={()=>{}}/>
+                  {payStatus==='approved'?'Payment Confirmed!':payStatus==='confirming'?'Confirming on blockchain...':payStatus==='expired'?'Payment Expired — Generate new link':'Waiting for your payment…'}
                 </div>
 
                 {/* QR */}
@@ -273,7 +322,12 @@ export default function Deposit() {
                   <p className="text-amber-300/80 text-xs">Send <strong>exactly {parseFloat(payInfo.payAmount).toFixed(2)} USDT</strong> to avoid issues. Payment auto-confirms in 1–3 confirmations.</p>
                 </div>
 
-                <p className="text-white/30 text-center text-xs">Checking status automatically every 8 seconds…</p>
+                {payStatus==='expired'?(
+                  <button onClick={()=>{setStep(0);setPayInfo(null);setPayStatus(null);setTimeLeft(0);localStorage.removeItem('activePayment');}}
+                    className="w-full py-3 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-sm">Generate New Payment Link</button>
+                ):(
+                  <p className="text-gray-400 dark:text-white/30 text-center text-xs">⏱ Time remaining: <span className="text-primary font-semibold">{formatTime(timeLeft)}</span> · Auto-checking every 8s</p>
+                )}
               </>
             ):(
               // Manual submit form
