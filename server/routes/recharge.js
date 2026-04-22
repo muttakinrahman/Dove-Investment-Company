@@ -95,7 +95,7 @@ router.get('/wallets', async (req, res) => {
                 BTC:   settings.walletBTC,
                 ETH:   settings.walletETH,
             },
-            minDepositAmount: settings.minDepositAmount,
+            minDepositAmount: 10,
         });
     } catch (err) {
         console.error('[Wallets]', err.message);
@@ -129,11 +129,10 @@ router.post('/create-payment', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Invalid amount' });
         }
 
-        // Min deposit check
-        const settings = await SystemSettings.findOne();
-        const minDeposit = settings?.minDepositAmount || 10;
-        if (numAmount < minDeposit) {
-            return res.status(400).json({ message: `Minimum deposit is $${minDeposit} USDT` });
+        // Min deposit check — hardcoded to 10 USDT
+        const MIN_DEPOSIT = 10;
+        if (numAmount < MIN_DEPOSIT) {
+            return res.status(400).json({ message: `Minimum deposit is $${MIN_DEPOSIT} USDT` });
         }
 
         // --- Create DB record first (we need _id as order_id) ---
@@ -339,10 +338,9 @@ router.post('/submit', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        const settings = await SystemSettings.findOne();
-        const minDeposit = settings?.minDepositAmount || 10;
-        if (parseFloat(amount) < minDeposit) {
-            return res.status(400).json({ message: `Minimum deposit is $${minDeposit} USDT` });
+        const MIN_DEPOSIT = 10;
+        if (parseFloat(amount) < MIN_DEPOSIT) {
+            return res.status(400).json({ message: `Minimum deposit is $${MIN_DEPOSIT} USDT` });
         }
 
         const existing = await Deposit.findOne({ transactionHash });
