@@ -172,6 +172,15 @@ const userSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    // 📅 Tracks monthly mission start per level (to calculate 28-30% working ratio)
+    salaryMissions: {
+        type: [{
+            levelId: { type: String, required: true },
+            missionStart: { type: Date, required: true },
+            missionEnd: { type: Date, required: true }
+        }],
+        default: []
+    },
     twoFactorSecret: {
         type: String,
         default: null

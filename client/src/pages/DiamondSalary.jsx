@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronLeft, Users, CheckCircle2, Info, Lock, Crown } from 'lucide-react';
+import { ChevronLeft, Users, CheckCircle2, Info, Lock, Crown, Target, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import BottomNav from '../components/BottomNav';
 
@@ -62,6 +62,109 @@ const ScootySVG = () => (
     </svg>
 );
 
+/* ─── Mission Progress Card ─── */
+const MissionProgress = ({ mission, isAchieved }) => {
+    if (!mission) return null;
+
+    const { progressPercent, newMembersCount, targetMin, targetMax, daysRemaining, isExpired, status, missionEnd } = mission;
+
+    const endDate = new Date(missionEnd).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    const statusConfig = {
+        completed: { bg: 'bg-emerald-50 border-emerald-200', bar: '#22c55e', text: 'text-emerald-700', icon: <CheckCircle2 size={12} className="text-emerald-600" />, label: 'Mission Complete ✅' },
+        in_progress: { bg: isAchieved ? 'bg-white/50 border-[#ccff00]/30' : 'bg-blue-50 border-blue-200', bar: '#ccff00', text: 'text-gray-700', icon: <Target size={12} className="text-blue-500" />, label: 'Mission In Progress' },
+        failed: { bg: 'bg-red-50 border-red-200', bar: '#ef4444', text: 'text-red-700', icon: <AlertCircle size={12} className="text-red-500" />, label: 'Mission Failed ❌' },
+    };
+    const cfg = statusConfig[status] || statusConfig['in_progress'];
+
+    return (
+        <div className={`rounded-2xl border p-3.5 mt-3 ${cfg.bg}`}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5">
+                    <TrendingUp size={12} className="text-gray-500" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Monthly Mission</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    {cfg.icon}
+                    <span className={`text-[8px] font-black uppercase ${cfg.text}`}>{cfg.label}</span>
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-2">
+                <div className="flex justify-between items-end mb-1">
+                    <span className="text-[9px] text-gray-500 font-bold">Working Ratio Progress</span>
+                    <span className="text-[9px] font-black" style={{ color: status === 'completed' ? '#22c55e' : status === 'failed' ? '#ef4444' : '#555' }}>
+                        {newMembersCount}/{targetMin} members
+                    </span>
+                </div>
+                <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden relative">
+                    <div
+                        className="h-full rounded-full transition-all duration-1000 relative"
+                        style={{
+                            width: `${progressPercent}%`,
+                            background: status === 'completed' ? 'linear-gradient(90deg, #86efac, #22c55e)' :
+                                        status === 'failed' ? 'linear-gradient(90deg, #fca5a5, #ef4444)' :
+                                        'linear-gradient(90deg, #d4ff33, #ccff00)',
+                            boxShadow: status === 'completed' ? '0 0 8px rgba(34,197,94,0.4)' :
+                                       status === 'in_progress' ? '0 0 8px rgba(204,255,0,0.5)' : 'none'
+                        }}
+                    />
+                    {/* 28% marker */}
+                    <div className="absolute top-0 h-full w-0.5 bg-gray-400/60" style={{ left: '100%' }} />
+                </div>
+                {/* Target range label */}
+                <div className="flex justify-between mt-1">
+                    <span className="text-[8px] text-gray-400">0</span>
+                    <span className="text-[8px] font-black text-gray-500">Target: {targetMin}–{targetMax} new members (28-30%)</span>
+                </div>
+            </div>
+
+            {/* Big % display */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                    <Calendar size={11} className="text-gray-400" />
+                    {isExpired ? (
+                        <span className="text-[9px] text-gray-400 font-bold">Mission ended {endDate}</span>
+                    ) : (
+                        <span className="text-[9px] text-gray-400 font-bold">{daysRemaining} days left • Ends {endDate}</span>
+                    )}
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className="text-2xl font-black" style={{
+                        color: status === 'completed' ? '#22c55e' : status === 'failed' ? '#ef4444' : '#ccff00',
+                        textShadow: '0 1px 3px rgba(0,0,0,0.25)'
+                    }}>{progressPercent}%</span>
+                </div>
+            </div>
+
+            {/* Info message */}
+            {status === 'completed' && (
+                <div className="mt-2 bg-emerald-100 rounded-xl px-3 py-1.5">
+                    <p className="text-[9px] text-emerald-700 font-bold text-center">
+                        🎉 Mission complete! Admin will process your next salary via group.
+                    </p>
+                </div>
+            )}
+            {status === 'in_progress' && !isExpired && (
+                <div className="mt-2 bg-gray-100 rounded-xl px-3 py-1.5">
+                    <p className="text-[9px] text-gray-500 font-bold text-center">
+                        Bring {Math.max(0, targetMin - newMembersCount)} more active deposit members to qualify
+                    </p>
+                </div>
+            )}
+            {status === 'failed' && (
+                <div className="mt-2 bg-red-100 rounded-xl px-3 py-1.5">
+                    <p className="text-[9px] text-red-600 font-bold text-center">
+                        Mission failed. Next month's salary not qualified.
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const DiamondSalary = () => {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
@@ -99,6 +202,7 @@ const DiamondSalary = () => {
 
     const achieved = data?.achievedLevel || 0;
     const claimed = data?.claimedSalaryLevels || [];
+    const missionProgress = data?.missionProgress || {};
 
     return (
         <div className="min-h-screen bg-white dark:bg-dark-300 transition-colors duration-300 pb-24">
@@ -183,6 +287,7 @@ const DiamondSalary = () => {
                         const giftColor = GIFT_COLORS[lvl.giftType] || 'from-gray-400 to-gray-500';
                         const giftImg = GIFT_IMAGES[lvl.giftType];
                         const isScooty = lvl.giftType === 'scooty';
+                        const mission = missionProgress[lvl.id];
 
                         const cardCls = isAchieved
                             ? 'border-[#ccff00]/40 dark:border-[#ccff00]/20 shadow-lg shadow-[#ccff00]/10'
@@ -235,7 +340,7 @@ const DiamondSalary = () => {
                                         ) : <Lock size={14} className="text-gray-300 dark:text-white/15" />}
                                     </div>
 
-                                    {/* Progress */}
+                                    {/* Progress bars */}
                                     <div className="space-y-2.5">
                                         <div>
                                             <div className="flex justify-between mb-1">
@@ -256,6 +361,9 @@ const DiamondSalary = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* ── Monthly Mission Progress (only for claimed levels) ── */}
+                                    {isClaimed && <MissionProgress mission={mission} isAchieved={isAchieved} />}
                                 </div>
                             </div>
                         );
