@@ -34,7 +34,7 @@ const DiamondIcon = ({ size = 40, filled = false, glow = false }) => (
 
 /* ─── Gift images ─── */
 const GIFT_IMAGES = {
-    phone: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=120&h=120&fit=crop&q=80',
+    phone: 'https://images.unsplash.com/photo-1598327105666-5b89351cb315?w=200&h=200&fit=crop&q=80',
     laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=120&h=120&fit=crop&q=80',
     iphone: 'https://images.unsplash.com/photo-1632633173522-47456de71b76?w=120&h=120&fit=crop&q=80',
     bike: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=120&h=120&fit=crop&q=80',
@@ -143,7 +143,7 @@ const DiamondSalary = () => {
                     <div className="text-center relative z-10 mb-5">
                         <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] mb-1">Your Salary Level</p>
                         <p className="text-4xl font-black text-white italic tracking-tighter">
-                            {achieved > 0 ? `Level ${achieved}` : 'Not Qualified'}
+                            {achieved > 0 ? `Diamond ${achieved}` : 'Not Qualified'}
                         </p>
                         {achieved > 0 && <p className="font-bold text-sm mt-1" style={{color: '#ccff00'}}>${data.levels[achieved - 1].monthlyUSD}/Month</p>}
                     </div>
@@ -201,7 +201,7 @@ const DiamondSalary = () => {
                                                     <img key={i} src="/images/diamond.png" alt="" className={`w-7 h-7 object-contain ${isAchieved ? 'drop-shadow-[0_0_4px_rgba(204,255,0,0.5)]' : 'opacity-20 grayscale'}`} />
                                                 ))}
                                             </div>
-                                            <h3 className="text-gray-900 dark:text-white font-black text-lg uppercase tracking-tight italic">Level {lvl.level}</h3>
+                                            <h3 className="text-gray-900 dark:text-white font-black text-lg uppercase tracking-tight italic">Diamond {lvl.level}</h3>
                                             <p className="text-gray-400 dark:text-white/30 text-[10px] font-bold mt-0.5">A: {lvl.aRequired} • B+C: {lvl.bcRequired} members</p>
                                         </div>
                                         <div className="text-right">
