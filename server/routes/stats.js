@@ -78,55 +78,98 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Helper function to check if user has made an approved deposit
+        // Helper: check if user has an approved deposit
         const checkDeposit = async (userId) => {
             const deposit = await Deposit.findOne({ userId, status: 'approved' });
             return !!deposit;
         };
 
+        // Helper: compute total balance = available balance + active lend locked amount
+        // If total balance >= $50 → isActiveMember = true; below $50 → pending
+        const computeTotalBalance = (u) => {
+            const activeInvTotal = (u.investments || [])
+                .filter(inv => inv.status === 'active')
+                .reduce((sum, inv) => sum + (inv.package?.investmentAmount || 0), 0);
+            return (u.balance || 0) + activeInvTotal;
+        };
+
         // Gen 1
-        const gen1Users = await User.find({ referredBy: user.invitationCode }, 'phone fullName invitationCode isTeamMember createdAt');
-        const gen1 = await Promise.all(gen1Users.map(async (u) => ({
-            _id: u._id,
-            phone: u.phone,
-            fullName: u.fullName,
-            invitationCode: u.invitationCode,
-            isTeamMember: u.isTeamMember,
-            createdAt: u.createdAt,
-            hasDeposited: await checkDeposit(u._id)
-        })));
+        const gen1Users = await User.find(
+            { referredBy: user.invitationCode },
+            'phone email fullName invitationCode isTeamMember createdAt balance investments'
+        );
+        const gen1 = await Promise.all(gen1Users.map(async (u) => {
+            const hasDeposited = await checkDeposit(u._id);
+            const totalBalance = computeTotalBalance(u);
+            const isActiveMember = hasDeposited && totalBalance >= 50;
+            return {
+                _id: u._id,
+                phone: u.phone,
+                email: u.email,
+                fullName: u.fullName,
+                invitationCode: u.invitationCode,
+                isTeamMember: u.isTeamMember,
+                createdAt: u.createdAt,
+                hasDeposited,
+                totalBalance,
+                isActiveMember  // true = Deposited badge; false = Pending badge
+            };
+        }));
 
         const gen1Codes = gen1Users.map(u => u.invitationCode);
 
         // Gen 2
-        const gen2Users = await User.find({ referredBy: { $in: gen1Codes } }, 'phone fullName invitationCode isTeamMember createdAt');
-        const gen2 = await Promise.all(gen2Users.map(async (u) => ({
-            _id: u._id,
-            phone: u.phone,
-            fullName: u.fullName,
-            invitationCode: u.invitationCode,
-            isTeamMember: u.isTeamMember,
-            createdAt: u.createdAt,
-            hasDeposited: await checkDeposit(u._id)
-        })));
+        const gen2Users = await User.find(
+            { referredBy: { $in: gen1Codes } },
+            'phone email fullName invitationCode isTeamMember createdAt balance investments'
+        );
+        const gen2 = await Promise.all(gen2Users.map(async (u) => {
+            const hasDeposited = await checkDeposit(u._id);
+            const totalBalance = computeTotalBalance(u);
+            const isActiveMember = hasDeposited && totalBalance >= 50;
+            return {
+                _id: u._id,
+                phone: u.phone,
+                email: u.email,
+                fullName: u.fullName,
+                invitationCode: u.invitationCode,
+                isTeamMember: u.isTeamMember,
+                createdAt: u.createdAt,
+                hasDeposited,
+                totalBalance,
+                isActiveMember
+            };
+        }));
 
         const gen2Codes = gen2Users.map(u => u.invitationCode);
 
         // Gen 3
-        const gen3Users = await User.find({ referredBy: { $in: gen2Codes } }, 'phone fullName invitationCode isTeamMember createdAt');
-        const gen3 = await Promise.all(gen3Users.map(async (u) => ({
-            _id: u._id,
-            phone: u.phone,
-            fullName: u.fullName,
-            invitationCode: u.invitationCode,
-            isTeamMember: u.isTeamMember,
-            createdAt: u.createdAt,
-            hasDeposited: await checkDeposit(u._id)
-        })));
+        const gen3Users = await User.find(
+            { referredBy: { $in: gen2Codes } },
+            'phone email fullName invitationCode isTeamMember createdAt balance investments'
+        );
+        const gen3 = await Promise.all(gen3Users.map(async (u) => {
+            const hasDeposited = await checkDeposit(u._id);
+            const totalBalance = computeTotalBalance(u);
+            const isActiveMember = hasDeposited && totalBalance >= 50;
+            return {
+                _id: u._id,
+                phone: u.phone,
+                email: u.email,
+                fullName: u.fullName,
+                invitationCode: u.invitationCode,
+                isTeamMember: u.isTeamMember,
+                createdAt: u.createdAt,
+                hasDeposited,
+                totalBalance,
+                isActiveMember
+            };
+        }));
 
         const allMembers = [...gen1, ...gen2, ...gen3];
         const total = allMembers.length;
-        const activeCount = allMembers.filter(m => m.hasDeposited).length;
+        // Active count: only members with deposit AND total balance >= $50
+        const activeCount = allMembers.filter(m => m.isActiveMember).length;
 
         res.json({ gen1, gen2, gen3, total, activeCount });
 

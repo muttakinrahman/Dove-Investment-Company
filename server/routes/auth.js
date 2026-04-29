@@ -459,25 +459,34 @@ router.get('/me', authMiddleware, async (req, res) => {
         console.log(`[Auth] /me called for ${user.phone || user.email}. memberId: ${user.memberId}`);
 
         // ─── Calculate Active Referral Stats (Gen 1 + Gen 2 + Gen 3) ───
-        // Active member = isTeamMember: true (has made at least one approved deposit)
+        // Active member = isTeamMember: true AND total balance (available + active lend) >= $50
+        // If total balance < $50, the member is treated as pending (not counted as active)
+
+        // Helper: total balance = available balance + active lend locked principal
+        const getMemberTotalBalance = (u) => {
+            const activeInvTotal = (u.investments || [])
+                .filter(inv => inv.status === 'active')
+                .reduce((sum, inv) => sum + (inv.package?.investmentAmount || 0), 0);
+            return (u.balance || 0) + activeInvTotal;
+        };
 
         // Gen 1 — Direct referrals
-        const gen1Users = await User.find({ referredBy: user.invitationCode }, 'invitationCode isTeamMember');
-        const gen1ActiveCount = gen1Users.filter(u => u.isTeamMember).length;
+        const gen1Users = await User.find({ referredBy: user.invitationCode }, 'invitationCode isTeamMember balance investments');
+        const gen1ActiveCount = gen1Users.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
         const gen1Codes = gen1Users.map(u => u.invitationCode);
 
         // Gen 2 — Referrals of Gen 1
         const gen2Users = gen1Codes.length > 0
-            ? await User.find({ referredBy: { $in: gen1Codes } }, 'invitationCode isTeamMember')
+            ? await User.find({ referredBy: { $in: gen1Codes } }, 'invitationCode isTeamMember balance investments')
             : [];
-        const gen2ActiveCount = gen2Users.filter(u => u.isTeamMember).length;
+        const gen2ActiveCount = gen2Users.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
         const gen2Codes = gen2Users.map(u => u.invitationCode);
 
         // Gen 3 — Referrals of Gen 2
         const gen3Users = gen2Codes.length > 0
-            ? await User.find({ referredBy: { $in: gen2Codes } }, 'invitationCode isTeamMember')
+            ? await User.find({ referredBy: { $in: gen2Codes } }, 'invitationCode isTeamMember balance investments')
             : [];
-        const gen3ActiveCount = gen3Users.filter(u => u.isTeamMember).length;
+        const gen3ActiveCount = gen3Users.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
 
         // Combined counts for level check
         const gen23ActiveCount = gen2ActiveCount + gen3ActiveCount;  // Gen 2 + Gen 3 combined

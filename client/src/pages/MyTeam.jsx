@@ -120,7 +120,7 @@ const MyTeam = () => {
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-1.5">
-                                    {member.hasDeposited ? (
+                                    {member.isActiveMember ? (
                                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                                             <CheckCircle2 size={12} className="text-green-400" />
                                             <span className="text-[9px] font-black text-green-400 uppercase tracking-tighter">Deposited</span>
