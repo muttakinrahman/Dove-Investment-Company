@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Edit2, Search, LogIn, ShieldBan, ShieldCheck } from 'lucide-react';
+import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminUsers = () => {
@@ -80,6 +80,21 @@ const AdminUsers = () => {
         } catch (error) {
             console.error('Error logging in as user:', error);
             toast.error('Failed to login as user');
+        }
+    };
+
+    const handleDisable2FA = async (user) => {
+        if (!window.confirm(`Disable Google Authenticator for "${user.fullName || user.phone || user.email}"?\n\nThey will be able to log in without 2FA and can set it up again from Security Settings.`)) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post(`/api/admin/user/${user._id}/disable-2fa`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success(response.data.message || '2FA disabled successfully');
+            fetchUsers();
+        } catch (error) {
+            const msg = error.response?.data?.message || 'Failed to disable 2FA';
+            toast.error(msg);
         }
     };
 
@@ -182,6 +197,15 @@ const AdminUsers = () => {
                                                 >
                                                     {user.isBlocked ? <ShieldCheck size={16} /> : <ShieldBan size={16} />}
                                                 </button>
+                                                {user.twoFactorEnabled && (
+                                                    <button
+                                                        onClick={() => handleDisable2FA(user)}
+                                                        className="p-2 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500 hover:text-white transition-colors"
+                                                        title="Disable Google Authenticator (2FA)"
+                                                    >
+                                                        <KeyRound size={16} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

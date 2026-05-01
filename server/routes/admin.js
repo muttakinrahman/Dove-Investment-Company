@@ -692,4 +692,126 @@ router.post('/impersonate/:id', authMiddleware, adminMiddleware, async (req, res
     }
 });
 
+// ================= ADMIN: DISABLE 2FA FOR USER =================
+
+// Admin force-disable Google Authenticator for a user (no code needed)
+router.post('/user/:id/disable-2fa', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (!user.twoFactorEnabled && !user.twoFactorSecret) {
+            return res.status(400).json({ message: '2FA is not enabled for this user' });
+        }
+
+        // Force disable 2FA — no code required (admin override)
+        user.twoFactorEnabled = false;
+        user.twoFactorSecret = null;
+        await user.save();
+
+        await AdminLog.create({
+            adminId: req.userId,
+            action: 'admin_disabled_2fa',
+            targetUserId: user._id,
+            description: `Admin force-disabled 2FA for user ${user.fullName || user.phone || user.email}`
+        });
+
+        res.json({
+            success: true,
+            message: `Google Authenticator has been disabled for ${user.fullName || user.phone || user.email}. They can now set it up again.`
+        });
+    } catch (error) {
+        console.error('Admin disable 2FA error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ================= REFERRAL TREE =================
+
+// Get referral upline chain for a user (who referred them, who referred that person, etc.)
+router.get('/referral-chain/:userId', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const targetUser = await User.findById(userId).select('-password -transactionPin');
+        if (!targetUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Build upline chain (traverse referredBy codes upward)
+        const chain = [];
+        let currentCode = targetUser.referredBy;
+        let depth = 0;
+        const MAX_DEPTH = 20; // safety limit
+
+        while (currentCode && depth < MAX_DEPTH) {
+            const uplineUser = await User.findOne({ invitationCode: currentCode })
+                .select('-password -transactionPin');
+            if (!uplineUser) break;
+
+            chain.push({
+                level: depth + 1,
+                _id: uplineUser._id,
+                fullName: uplineUser.fullName,
+                phone: uplineUser.phone,
+                email: uplineUser.email,
+                invitationCode: uplineUser.invitationCode,
+                referredBy: uplineUser.referredBy,
+                balance: uplineUser.balance,
+                vipLevel: uplineUser.vipLevel,
+                isBlocked: uplineUser.isBlocked,
+                createdAt: uplineUser.createdAt
+            });
+
+            currentCode = uplineUser.referredBy;
+            depth++;
+        }
+
+        // Get direct referrals (downline level 1) for the target user
+        const directReferrals = await User.find({ referredBy: targetUser.invitationCode })
+            .select('-password -transactionPin')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            user: targetUser,
+            uplineChain: chain,
+            directReferrals
+        });
+    } catch (error) {
+        console.error('Referral chain error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Search users for referral tree (lightweight search)
+router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length < 2) {
+            return res.json([]);
+        }
+
+        const users = await User.find({
+            role: { $ne: 'admin' },
+            $or: [
+                { phone: { $regex: q.trim(), $options: 'i' } },
+                { email: { $regex: q.trim(), $options: 'i' } },
+                { fullName: { $regex: q.trim(), $options: 'i' } },
+                { invitationCode: { $regex: q.trim(), $options: 'i' } }
+            ]
+        })
+            .select('fullName phone email invitationCode referredBy vipLevel balance')
+            .limit(15);
+
+        res.json(users);
+    } catch (error) {
+        console.error('Referral search error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;
+
