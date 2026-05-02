@@ -622,6 +622,7 @@ router.get('/me', authMiddleware, async (req, res) => {
             starACount,
             starBCount,
             totalLifetimeDeposits,
+            canViewTeamBusiness: user.canViewTeamBusiness || false,
             stats: {
                 directResults: directCount,
                 teamMembers: teamCount,
