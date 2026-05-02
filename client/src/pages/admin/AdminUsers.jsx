@@ -153,7 +153,7 @@ const AdminUsers = () => {
                             <tr className="border-b border-slate-200 dark:border-white/10 bg-gray-900/5 dark:bg-white/5">
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">User</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Invite Code</th>
-                                <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Balance</th>
+                                <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Total Balance</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Level</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Joined</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Actions</th>
@@ -184,7 +184,24 @@ const AdminUsers = () => {
                                             <div className="text-gray-900/60 dark:text-white/60 text-xs">{user.email || user.phone || 'No Contact'}</div>
                                         </td>
                                         <td className="p-4 text-gray-900/60 dark:text-white/60 text-xs font-mono">{user.invitationCode || 'N/A'}</td>
-                                        <td className="p-4 text-green-400 font-bold text-sm">${(user.balance || 0).toFixed(2)}</td>
+                                        <td className="p-4 text-sm">
+                                            {(() => {
+                                                const activeLend = (user.investments || [])
+                                                    .filter(inv => inv.status === 'active')
+                                                    .reduce((sum, inv) => sum + (inv.package?.investmentAmount || 0), 0);
+                                                const total = (user.balance || 0) + activeLend;
+                                                return (
+                                                    <div>
+                                                        <div className="text-green-400 font-bold">${total.toFixed(2)}</div>
+                                                        {activeLend > 0 && (
+                                                            <div className="text-[10px] text-white/40 mt-0.5">
+                                                                ${(user.balance || 0).toFixed(2)} + ${activeLend.toFixed(2)} lend
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </td>
                                         <td className="p-4 text-yellow-400 text-sm font-bold">Level {(user.vipLevel ?? 0) + 1}</td>
                                         <td className="p-4 text-gray-900/60 dark:text-white/60 text-xs text-nowrap">
                                             {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
