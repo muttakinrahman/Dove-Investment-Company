@@ -103,7 +103,7 @@ const BalanceWarningPopup = ({ warningInfo, onClose }) => {
                             ⚠️ Balance Warning!
                         </h2>
                         <p className="text-white/80 text-xs text-center font-medium mb-5">
-                            আপনার অ্যাকাউন্ট নিষ্ক্রিয় হওয়ার ঝুঁকিতে আছে
+                            Your account is at risk of being deactivated
                         </p>
 
                         {/* Balance Info */}
@@ -156,9 +156,9 @@ const BalanceWarningPopup = ({ warningInfo, onClose }) => {
                         {/* Warning Message */}
                         <div className="bg-black/20 rounded-2xl p-3 mb-5 backdrop-blur-sm">
                             <p className="text-white/90 text-xs text-center leading-relaxed">
-                                <strong>সময়ের মধ্যে $50 না রাখলে</strong> আপনার অ্যাকাউন্ট{' '}
-                                <span className="text-white font-black">inactive</span> হয়ে যাবে এবং
-                                আপনি আপনার referrer এর active member list থেকে বাদ পড়বেন।
+                                <strong>If you do not maintain a $50 balance</strong> within the time limit, your account will become{' '}
+                                <span className="text-white font-black">inactive</span> and
+                                you will be removed from your referrer's active member list.
                             </p>
                         </div>
 
