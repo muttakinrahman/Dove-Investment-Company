@@ -20,10 +20,11 @@
   <meta http-equiv="content-language" content="en-US" />
 
   <!-- ==================== GEO TARGETING (USA) ==================== -->
-  <meta name="geo.region" content="US" />
+  <meta name="geo.region" content="US-WA" />
   <meta name="geo.country" content="US" />
-  <meta name="geo.placename" content="United States" />
-  <meta name="ICBM" content="37.0902, -95.7129" />
+  <meta name="geo.placename" content="Anacortes, Washington, USA" />
+  <meta name="ICBM" content="48.4469109, -122.5773221" />
+  <meta name="geo.position" content="48.4469109;-122.5773221" />
   <meta name="distribution" content="global" />
   <meta name="target" content="all" />
   <meta name="rating" content="general" />
@@ -91,21 +92,31 @@
     "@context": "https://schema.org",
     "@type": "FinancialService",
     "name": "Dove Investment Gold Mine",
-    "alternateName": "Dove Investment",
+    "alternateName": ["Dove Investment", "DIGM"],
     "url": "https://doveinvestment.cloud",
     "logo": "https://doveinvestment.cloud/pwa-icon-512.png",
     "image": "https://doveinvestment.cloud/pwa-icon-512.png",
     "description": "Dove Investment Gold Mine is a premier US-based investment platform specializing in gold mining and cryptocurrency investments. Earn passive income with secure, transparent, and high-yield returns. Trusted by thousands of investors across 36+ countries worldwide.",
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "13553 S Green St",
+      "addressLocality": "Anacortes",
+      "addressRegion": "WA",
+      "postalCode": "98221",
       "addressCountry": "US"
     },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "48.4469109",
+      "longitude": "-122.5773221"
+    },
+    "hasMap": "https://www.google.com/maps/place/13553+S+Green+St,+Anacortes,+WA+98221,+USA",
     "areaServed": {
       "@type": "GeoCircle",
       "geoMidpoint": {
         "@type": "GeoCoordinates",
-        "latitude": "37.0902",
-        "longitude": "-95.7129"
+        "latitude": "48.4469109",
+        "longitude": "-122.5773221"
       },
       "geoRadius": "10000 km"
     },
@@ -138,13 +149,25 @@
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Dove Investment Gold Mine",
+    "legalName": "Dove Investment Gold Mine LLC",
     "url": "https://doveinvestment.cloud",
     "logo": "https://doveinvestment.cloud/pwa-icon-512.png",
+    "foundingDate": "2025",
     "description": "Premier US-based gold mining and cryptocurrency investment platform trusted by investors worldwide.",
     "address": {
       "@type": "PostalAddress",
+      "streetAddress": "13553 S Green St",
+      "addressLocality": "Anacortes",
+      "addressRegion": "WA",
+      "postalCode": "98221",
       "addressCountry": "US"
     },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "48.4469109",
+      "longitude": "-122.5773221"
+    },
+    "hasMap": "https://www.google.com/maps/place/13553+S+Green+St,+Anacortes,+WA+98221,+USA",
     "sameAs": [
       "https://t.me/doveinvestmentgoldmine"
     ]
