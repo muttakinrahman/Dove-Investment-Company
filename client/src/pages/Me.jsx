@@ -342,6 +342,26 @@ const Me = () => {
                         </a>
                     </div>
 
+                    {user?.canViewTeamBusiness && (
+                        <div className="bg-amber-100 dark:bg-amber-900/20 backdrop-blur-md overflow-hidden border border-amber-300 dark:border-amber-500/20 rounded-2xl shadow-sm shadow-amber-500/10">
+                            <button
+                                onClick={() => navigate('/team-business')}
+                                className="w-full flex items-center justify-between px-4 py-4 hover:bg-amber-200/40 dark:hover:bg-amber-500/10 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-amber-200 dark:bg-amber-500/20 rounded-xl text-amber-700 dark:text-amber-400 shadow-inner">
+                                        <Briefcase size={18} />
+                                    </div>
+                                    <div className="text-left">
+                                        <span className="text-gray-800 dark:text-white text-sm font-black uppercase tracking-tight block">Team Business</span>
+                                        <span className="text-amber-600 dark:text-amber-400 text-[9px] font-bold uppercase">Partner Breakdown</span>
+                                    </div>
+                                </div>
+                                <ChevronRight size={16} className="text-amber-400" />
+                            </button>
+                        </div>
+                    )}
+
                     <div className="bg-rose-300 dark:bg-rose-900/10 backdrop-blur-md overflow-hidden border border-rose-400 dark:border-white/5 rounded-2xl shadow-sm shadow-rose-500/20">
                         <button
                             onClick={handleLogout}

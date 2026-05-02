@@ -38,6 +38,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Maintenance from './pages/Maintenance';
 import MyTeam from './pages/MyTeam';
+import TeamBusiness from './pages/TeamBusiness';
 import axios from 'axios';
 
 // Restoring Placeholder components
@@ -145,6 +146,7 @@ function App() {
                 <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
                 <Route path="/level-requirements" element={<ProtectedRoute><LevelRequirements /></ProtectedRoute>} />
                 <Route path="/my-team" element={<ProtectedRoute><MyTeam /></ProtectedRoute>} />
+                <Route path="/team-business" element={<ProtectedRoute><TeamBusiness /></ProtectedRoute>} />
                 <Route path="/diamond-salary" element={<ProtectedRoute><DiamondSalary /></ProtectedRoute>} />
                 <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
