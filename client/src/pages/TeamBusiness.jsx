@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Briefcase, Users, DollarSign, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, DollarSign, TrendingUp, Search } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 
 const TeamBusiness = () => {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -45,8 +46,17 @@ const TeamBusiness = () => {
         );
     }
 
-    // Filter: only partners with deposit > 0
-    const activePartners = (data.partnerBreakdown || []).filter(p => p.teamDeposit > 0);
+    // Filter: only partners with deposit > 0 AND matches search query
+    const activePartners = (data.partnerBreakdown || []).filter(p => {
+        if (p.teamDeposit <= 0) return false;
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+            (p.fullName && p.fullName.toLowerCase().includes(q)) ||
+            (p.email && p.email.toLowerCase().includes(q)) ||
+            (p.phone && p.phone.toLowerCase().includes(q))
+        );
+    });
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-300 pb-24">
@@ -100,13 +110,27 @@ const TeamBusiness = () => {
                     </div>
                 </div>
 
+                {/* Search Bar */}
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search size={18} className="text-gray-400 dark:text-white/30" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search partners by name, email, or phone..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white dark:bg-dark-200 border border-gray-200 dark:border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 shadow-sm transition-all"
+                    />
+                </div>
+
                 {/* Partner Breakdown */}
                 {activePartners.length > 0 ? (
                     <div className="bg-white dark:bg-dark-200 rounded-3xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-md">
                         {/* Section Header */}
                         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-white/5 bg-amber-50 dark:bg-amber-500/5">
                             <TrendingUp size={16} className="text-amber-600 dark:text-amber-400" />
-                            <p className="text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]">Partner Business Breakdown</p>
+                            <p className="text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]">Direct Refer Partner Business</p>
                             <span className="ml-auto bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[9px] font-black px-2 py-0.5 rounded-full">
                                 {activePartners.length} partners
                             </span>
