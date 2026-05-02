@@ -2,10 +2,11 @@
  * ⚠️ Balance Warning & Auto-Block Utility
  *
  * Rules:
+ * - ONLY applies to users who have at least 1 approved deposit.
+ *   (New users with only the $5 welcome bonus are EXEMPT.)
  * - If user's total balance (available + active lend principal) < $50:
  *     → Set balanceWarningDate (if not already set)
  *     → After 3 days still < $50 → isTeamMember = false (user becomes inactive)
- *     → Referrer's level may be affected (auto-downgrade runs separately in /me)
  * - If user's total balance >= $50:
  *     → Clear balanceWarningDate (user recovered)
  *
@@ -15,6 +16,7 @@
  */
 
 import User from '../models/User.js';
+import Deposit from '../models/Deposit.js';
 
 const MINIMUM_BALANCE = 50;
 const WARNING_HOURS = 72; // 3 days
@@ -51,9 +53,12 @@ export const releaseLendInvestments = (user) => {
  * Check user's balance and enforce the $50 minimum rule.
  * Must be called AFTER user is fetched from DB but BEFORE saving.
  *
+ * IMPORTANT: This rule ONLY applies to users who have made at least 1 approved deposit.
+ * New users (only $5 welcome bonus, no real deposit) are completely exempt.
+ *
  * @param {Object} user - Mongoose User document
  * @param {boolean} saveUser - Whether to save the user document (default: true)
- * @returns {Object} { hasWarning, hoursLeft, totalBalance, justBlocked }
+ * @returns {Object} { hasWarning, hoursLeft, totalBalance, justBlocked, exempt }
  */
 export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
     const totalBalance = getUserTotalBalance(user);
@@ -61,6 +66,33 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
     let dirty = false;
     let justBlocked = false;
 
+    // ── EXEMPT CHECK ──
+    // Only apply this rule to users who have at least 1 approved deposit.
+    // New members with only the $5 welcome bonus are NOT subject to this rule.
+    const approvedDepositCount = await Deposit.countDocuments({
+        userId: user._id,
+        status: 'approved'
+    });
+
+    if (approvedDepositCount === 0) {
+        // User has never made a real deposit — clear any stale warning and skip
+        if (user.balanceWarningDate) {
+            user.balanceWarningDate = null;
+            if (saveUser) await user.save();
+        }
+        console.log(`[BalanceCheck] EXEMPT (no approved deposits) for ${user.email || user.phone}`);
+        return {
+            hasWarning: false,
+            warningDate: null,
+            hoursLeft: null,
+            deadline: null,
+            totalBalance,
+            justBlocked: false,
+            exempt: true
+        };
+    }
+
+    // ── BALANCE CHECK (only for depositors) ──
     if (totalBalance < MINIMUM_BALANCE) {
         if (!user.balanceWarningDate) {
             // First time dropping below $50 — start the warning clock
@@ -96,7 +128,8 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
             hoursLeft: Math.round(hoursLeft * 10) / 10,
             deadline: deadlineDate,
             totalBalance,
-            justBlocked
+            justBlocked,
+            exempt: false
         };
 
     } else {
@@ -117,7 +150,8 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
             hoursLeft: null,
             deadline: null,
             totalBalance,
-            justBlocked: false
+            justBlocked: false,
+            exempt: false
         };
     }
 };
