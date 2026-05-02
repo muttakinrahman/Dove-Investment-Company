@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BottomNav from '../components/BottomNav';
 import PinModal from '../components/PinModal';
+import BalanceWarningPopup from '../components/BalanceWarningPopup';
 
 const HeroSlider = () => {
     const slides = [
@@ -93,6 +94,23 @@ const Home = () => {
     const [actionType, setActionType] = useState(null); // 'deposit' or 'withdraw'
     const [stats, setStats] = useState(null);
     const [companyInfo, setCompanyInfo] = useState(null);
+    const [showWarningPopup, setShowWarningPopup] = useState(false);
+
+    // Show balance warning popup once per session
+    useEffect(() => {
+        if (user?.balanceWarning?.hasWarning) {
+            const sessionKey = `balanceWarningShown_${user.id}`;
+            const alreadyShown = sessionStorage.getItem(sessionKey);
+            if (!alreadyShown) {
+                // Small delay so the page loads first, then popup appears
+                const t = setTimeout(() => {
+                    setShowWarningPopup(true);
+                    sessionStorage.setItem(sessionKey, 'true');
+                }, 800);
+                return () => clearTimeout(t);
+            }
+        }
+    }, [user]);
 
     useEffect(() => {
         fetchData();
@@ -145,6 +163,14 @@ const Home = () => {
                 onSuccess={handlePinSuccess}
                 mode={pinMode}
             />
+
+            {/* Balance Warning Popup */}
+            {showWarningPopup && (
+                <BalanceWarningPopup
+                    warningInfo={user?.balanceWarning}
+                    onClose={() => setShowWarningPopup(false)}
+                />
+            )}
 
             {/* Header */}
             <div className="bg-white dark:bg-dark-200 border-b border-slate-200 dark:border-white/10">

@@ -9,6 +9,7 @@ import { createNotification } from '../utils/notifications.js';
 import { sendWithdrawalRequestEmail, sendWithdrawalApprovedEmail, sendEmail } from '../services/emailService.js';
 import speakeasy from 'speakeasy';
 import Otp from '../models/Otp.js';
+import { checkAndEnforceMinBalance } from '../utils/balanceCheck.js';
 
 const router = express.Router();
 
@@ -211,6 +212,9 @@ router.post('/request', authMiddleware, async (req, res) => {
         // Deduct from user balance immediately
         user.balance -= totalAmount;
         await user.save();
+
+        // ⚠️ Check if balance dropped below $50 (start warning timer if needed)
+        await checkAndEnforceMinBalance(user, true);
 
         // Notification: Withdrawal Requested
         await createNotification({

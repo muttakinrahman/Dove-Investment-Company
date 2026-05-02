@@ -9,6 +9,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { checkAndEnforceMinBalance, releaseLendInvestments } from '../utils/balanceCheck.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -540,9 +541,19 @@ router.get('/me', authMiddleware, async (req, res) => {
         }
         console.log(`[LevelCheck] Result: newLevel=${newLevel} (was ${user.vipLevel})`);
 
-        // Apply correct level (upgrade OR fix incorrect level from DB)
+        // Apply correct level (upgrade OR downgrade)
         if (newLevel !== user.vipLevel) {
-            console.log(`[LevelCheck] Updating vipLevel: ${user.vipLevel} → ${newLevel}`);
+            const isDowngrade = newLevel < user.vipLevel;
+            console.log(`[LevelCheck] Updating vipLevel: ${user.vipLevel} → ${newLevel} (${isDowngrade ? 'DOWNGRADE' : 'UPGRADE'})`);
+
+            // ⬇️ Level DOWN: Release all active lend investments back to balance
+            if (isDowngrade) {
+                const released = releaseLendInvestments(user);
+                if (released > 0) {
+                    console.log(`[LevelCheck] Level-down release: $${released} returned to balance for ${user.email || user.phone}`);
+                }
+            }
+
             user.vipLevel = newLevel;
             await user.save();
         }
@@ -599,6 +610,10 @@ router.get('/me', authMiddleware, async (req, res) => {
         ]);
         const totalLifetimeDeposits = depositAgg.length > 0 ? depositAgg[0].total : 0;
 
+        // ⚠️ Balance Warning Check — $50 minimum rule
+        // Save=false here because we may save user below; we pass saveUser=true
+        const balanceWarningInfo = await checkAndEnforceMinBalance(user, true);
+
         res.json({
             id: user._id,
             phone: user.phone || '',
@@ -623,6 +638,7 @@ router.get('/me', authMiddleware, async (req, res) => {
             starBCount,
             totalLifetimeDeposits,
             canViewTeamBusiness: user.canViewTeamBusiness || false,
+            balanceWarning: balanceWarningInfo,
             stats: {
                 directResults: directCount,
                 teamMembers: teamCount,
