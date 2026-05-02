@@ -230,9 +230,9 @@ const AdminUsers = () => {
                                                     className={`p-2 rounded-lg transition-colors ${
                                                         user.canViewTeamBusiness
                                                             ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white'
-                                                            : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'
+                                                            : 'bg-slate-500/30 text-slate-400 hover:bg-yellow-500/20 hover:text-yellow-400'
                                                     }`}
-                                                    title={user.canViewTeamBusiness ? 'Disable Team Business View' : 'Enable Team Business View'}
+                                                    title={user.canViewTeamBusiness ? 'Team Business View: ON — Click to Disable' : 'Team Business View: OFF — Click to Enable'}
                                                 >
                                                     <Briefcase size={16} />
                                                 </button>
