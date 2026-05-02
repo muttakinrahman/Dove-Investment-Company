@@ -98,6 +98,7 @@ const MyTeam = () => {
                         </div>
 
                         <div className="relative z-10">
+                            {/* Header */}
                             <div className="flex items-center gap-2 mb-5">
                                 <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30">
                                     <Briefcase size={16} className="text-white" />
@@ -105,7 +106,8 @@ const MyTeam = () => {
                                 <p className="text-white/90 text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-sm">Team Business Overview</p>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-4 mb-5">
                                 {/* Total Members */}
                                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner">
                                     <div className="flex items-center gap-2 mb-2">
@@ -130,9 +132,57 @@ const MyTeam = () => {
                                     <p className="text-white/70 text-[9px] font-bold mt-1 uppercase">Approved Deposits</p>
                                 </div>
                             </div>
+
+                            {/* ── Partner Breakdown ── */}
+                            {teamListData.partnerBreakdown?.length > 0 && (
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
+                                    {/* Section Header */}
+                                    <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
+                                        <TrendingUp size={14} className="text-white" />
+                                        <p className="text-white text-[9px] font-black uppercase tracking-[0.2em]">Partner Business Breakdown</p>
+                                    </div>
+
+                                    {/* Partner Rows */}
+                                    <div className="divide-y divide-white/10">
+                                        {teamListData.partnerBreakdown.map((partner, idx) => {
+                                            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                                            const initials = partner.fullName?.charAt(0).toUpperCase() || '?';
+                                            return (
+                                                <div key={partner._id} className="flex items-center justify-between px-4 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Rank */}
+                                                        <span className="text-base w-6 text-center">{medal}</span>
+                                                        {/* Avatar */}
+                                                        <div className="w-8 h-8 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center text-white font-black text-xs">
+                                                            {initials}
+                                                        </div>
+                                                        {/* Info */}
+                                                        <div>
+                                                            <p className="text-white font-black text-xs drop-shadow-sm">
+                                                                {partner.fullName || partner.email || partner.phone}
+                                                            </p>
+                                                            <p className="text-white/60 text-[9px] font-bold">
+                                                                {partner.subTeamSize} sub-members
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Deposit Amount */}
+                                                    <div className="text-right">
+                                                        <p className="text-white font-black text-sm drop-shadow-md">
+                                                            ${(partner.teamDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </p>
+                                                        <p className="text-white/60 text-[9px] font-bold uppercase">team biz</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
+
 
                 {/* Tabs selection */}
                 <div className="flex p-1.5 bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/5 rounded-2xl shadow-inner">

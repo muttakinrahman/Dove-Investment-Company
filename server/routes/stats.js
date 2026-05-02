@@ -176,6 +176,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         // ==========================================
         let teamBusinessEnabled = false;
         let teamTotalDeposit = 0;
+        let partnerBreakdown = [];
 
         if (user.canViewTeamBusiness) {
             teamBusinessEnabled = true;
@@ -187,16 +188,56 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                 ...gen3Users.map(u => u._id)
             ];
 
-            // Sum all approved deposits from team members
+            // Sum all approved deposits from team members (grand total)
             const depositAgg = await Deposit.aggregate([
                 { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
             ]);
-
             teamTotalDeposit = depositAgg[0]?.total || 0;
+
+            // ── Per-partner breakdown ──
+            // For each Gen1 partner, calculate deposit of:
+            //   partner themselves + all their Gen2 + all their Gen3
+            partnerBreakdown = await Promise.all(gen1Users.map(async (partner) => {
+                // Find Gen2 under this partner
+                const partnerGen2 = await User.find(
+                    { referredBy: partner.invitationCode },
+                    '_id invitationCode'
+                );
+                const partnerGen2Codes = partnerGen2.map(u => u.invitationCode);
+
+                // Find Gen3 under this partner's Gen2
+                const partnerGen3 = await User.find(
+                    { referredBy: { $in: partnerGen2Codes } },
+                    '_id'
+                );
+
+                const partnerSubIds = [
+                    partner._id,
+                    ...partnerGen2.map(u => u._id),
+                    ...partnerGen3.map(u => u._id)
+                ];
+
+                const partnerDepAgg = await Deposit.aggregate([
+                    { $match: { userId: { $in: partnerSubIds }, status: 'approved' } },
+                    { $group: { _id: null, total: { $sum: '$amount' } } }
+                ]);
+
+                return {
+                    _id: partner._id,
+                    fullName: partner.fullName,
+                    email: partner.email,
+                    phone: partner.phone,
+                    teamDeposit: partnerDepAgg[0]?.total || 0,
+                    subTeamSize: partnerSubIds.length - 1  // exclude partner themselves
+                };
+            }));
+
+            // Sort by teamDeposit descending (highest contributor first)
+            partnerBreakdown.sort((a, b) => b.teamDeposit - a.teamDeposit);
         }
 
-        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit });
+        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit, partnerBreakdown });
 
     } catch (error) {
         console.error('Team list error:', error);
