@@ -29,7 +29,10 @@ const adminLogSchema = new mongoose.Schema({
             'impersonate_user',
             'user_blocked',
             'user_unblocked',
-            'manual_deposit'
+            'manual_deposit',
+            'admin_disabled_2fa',
+            'team_business_view_enabled',
+            'team_business_view_disabled'
         ]
     },
     targetUserId: {
