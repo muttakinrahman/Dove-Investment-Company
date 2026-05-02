@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound } from 'lucide-react';
+import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound, Briefcase } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminUsers = () => {
@@ -114,6 +114,22 @@ const AdminUsers = () => {
         }
     };
 
+    const handleToggleTeamBusiness = async (user) => {
+        const action = user.canViewTeamBusiness ? 'disable' : 'enable';
+        if (!window.confirm(`${action === 'enable' ? 'Enable' : 'Disable'} Team Business View for "${user.fullName || user.phone || user.email}"?`)) return;
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post(`/api/admin/user/${user._id}/toggle-team-business`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success(response.data.message);
+            fetchUsers();
+        } catch (error) {
+            console.error('Error toggling team business view:', error);
+            toast.error('Failed to update Team Business View');
+        }
+    };
+
     return (
         <div className="space-y-6 p-4">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -156,10 +172,13 @@ const AdminUsers = () => {
                                 users.map((user) => (
                                     <tr key={user._id} className="hover:bg-white/5 transition-colors">
                                         <td className="p-4">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 flex-wrap">
                                                 <span className="text-gray-900 dark:text-white font-medium text-sm">{user.fullName || 'No Name'}</span>
                                                 {user.isBlocked && (
                                                     <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded uppercase">Blocked</span>
+                                                )}
+                                                {user.canViewTeamBusiness && (
+                                                    <span className="px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px] font-bold rounded uppercase">💼 Biz View</span>
                                                 )}
                                             </div>
                                             <div className="text-gray-900/60 dark:text-white/60 text-xs">{user.email || user.phone || 'No Contact'}</div>
@@ -206,6 +225,17 @@ const AdminUsers = () => {
                                                         <KeyRound size={16} />
                                                     </button>
                                                 )}
+                                                <button
+                                                    onClick={() => handleToggleTeamBusiness(user)}
+                                                    className={`p-2 rounded-lg transition-colors ${
+                                                        user.canViewTeamBusiness
+                                                            ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white'
+                                                            : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white'
+                                                    }`}
+                                                    title={user.canViewTeamBusiness ? 'Disable Team Business View' : 'Enable Team Business View'}
+                                                >
+                                                    <Briefcase size={16} />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

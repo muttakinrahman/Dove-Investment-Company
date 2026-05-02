@@ -192,6 +192,12 @@ const userSchema = new mongoose.Schema({
     isBlocked: {
         type: Boolean,
         default: false
+    },
+    // 💼 Team Business View — Admin grants this to specific users
+    // Allows the user to see total team members & total team deposits on MyTeam page
+    canViewTeamBusiness: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

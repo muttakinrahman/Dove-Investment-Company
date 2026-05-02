@@ -729,6 +729,39 @@ router.post('/user/:id/disable-2fa', authMiddleware, adminMiddleware, async (req
     }
 });
 
+// ================= ADMIN: TOGGLE TEAM BUSINESS VIEW =================
+
+// Admin can enable/disable "Team Business View" for specific users
+// When enabled, the user can see total team members count & total team deposits on My Team page
+router.post('/user/:id/toggle-team-business', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.canViewTeamBusiness = !user.canViewTeamBusiness;
+        await user.save();
+
+        await AdminLog.create({
+            adminId: req.userId,
+            action: user.canViewTeamBusiness ? 'team_business_view_enabled' : 'team_business_view_disabled',
+            targetUserId: user._id,
+            description: `Admin ${user.canViewTeamBusiness ? 'enabled' : 'disabled'} Team Business View for user ${user.fullName || user.phone || user.email}`
+        });
+
+        res.json({
+            success: true,
+            canViewTeamBusiness: user.canViewTeamBusiness,
+            message: `Team Business View ${user.canViewTeamBusiness ? 'enabled' : 'disabled'} for ${user.fullName || user.phone || user.email}`
+        });
+    } catch (error) {
+        console.error('Toggle team business view error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ================= REFERRAL TREE =================
 
 // Get referral upline chain for a user (who referred them, who referred that person, etc.)

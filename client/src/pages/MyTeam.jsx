@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Users, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, X, CheckCircle2, AlertCircle, Briefcase, DollarSign, TrendingUp } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 import { toast } from 'react-toastify';
 
@@ -88,6 +88,51 @@ const MyTeam = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* 💼 Team Business Overview — only shown to privileged users */}
+                {teamListData?.teamBusinessEnabled && (
+                    <div className="bg-gradient-to-br from-yellow-500/20 via-amber-500/10 to-orange-500/10 border border-yellow-500/30 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                        {/* Background Icon */}
+                        <div className="absolute -right-4 -bottom-4 opacity-10">
+                            <Briefcase size={120} className="text-yellow-400" />
+                        </div>
+
+                        <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="p-1.5 bg-yellow-500/20 rounded-lg">
+                                    <Briefcase size={16} className="text-yellow-400" />
+                                </div>
+                                <p className="text-yellow-400/80 text-[10px] font-black uppercase tracking-[0.2em]">Team Business Overview</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Total Members */}
+                                <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Users size={14} className="text-blue-400" />
+                                        <p className="text-white/50 text-[9px] font-black uppercase tracking-widest">Total Members</p>
+                                    </div>
+                                    <h3 className="text-3xl font-black text-white tracking-tighter">
+                                        {teamListData.total}
+                                    </h3>
+                                    <p className="text-white/30 text-[9px] font-bold mt-0.5 uppercase">Gen 1 + 2 + 3</p>
+                                </div>
+
+                                {/* Total Team Deposits */}
+                                <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <DollarSign size={14} className="text-green-400" />
+                                        <p className="text-white/50 text-[9px] font-black uppercase tracking-widest">Team Deposit</p>
+                                    </div>
+                                    <h3 className="text-2xl font-black text-green-400 tracking-tighter">
+                                        ${(teamListData.teamTotalDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </h3>
+                                    <p className="text-white/30 text-[9px] font-bold mt-0.5 uppercase">Approved Deposits</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Tabs selection */}
                 <div className="flex p-1.5 bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/5 rounded-2xl shadow-inner">

@@ -171,7 +171,32 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         // Active count: only members with deposit AND total balance >= $50
         const activeCount = allMembers.filter(m => m.isActiveMember).length;
 
-        res.json({ gen1, gen2, gen3, total, activeCount });
+        // ==========================================
+        // 💼 TEAM BUSINESS VIEW — only for privileged users
+        // ==========================================
+        let teamBusinessEnabled = false;
+        let teamTotalDeposit = 0;
+
+        if (user.canViewTeamBusiness) {
+            teamBusinessEnabled = true;
+
+            // Collect all team member IDs (Gen 1 + 2 + 3)
+            const allMemberIds = [
+                ...gen1Users.map(u => u._id),
+                ...gen2Users.map(u => u._id),
+                ...gen3Users.map(u => u._id)
+            ];
+
+            // Sum all approved deposits from team members
+            const depositAgg = await Deposit.aggregate([
+                { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]);
+
+            teamTotalDeposit = depositAgg[0]?.total || 0;
+        }
+
+        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit });
 
     } catch (error) {
         console.error('Team list error:', error);
@@ -180,3 +205,4 @@ router.get('/team-list', authMiddleware, async (req, res) => {
 });
 
 export default router;
+
