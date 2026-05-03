@@ -35,9 +35,14 @@ export async function getUplineUsers(invitationCode, levels = 3) {
 }
 
 /**
- * Distribute referral bonus - ONLY to direct referrer (Gen 1), auto-credited to balance
- * @param {Object} investor - User who made the investment
- * @param {Number} investmentAmount - Investment amount
+ * Distribute referral bonus - ONLY to direct referrer (Gen 1), auto-credited to balance.
+ *
+ * ⚠️ CAP RULE: Referrer only earns bonus on the FIRST $300 of deposits from each referred member.
+ * If the member has already deposited $300+, no bonus is paid regardless of future deposits.
+ * Partial bonus is supported: e.g. member deposited $250 before → only $50 more is eligible.
+ *
+ * @param {Object} investor - User who made the deposit
+ * @param {Number} investmentAmount - This deposit's amount
  * @returns {Array} Array of commission records
  */
 export async function distributeCommissions(investor, investmentAmount) {
@@ -50,44 +55,82 @@ export async function distributeCommissions(investor, investmentAmount) {
         // Only Gen 1 gets the bonus
         if (level !== 1) continue;
 
-        const commissionAmount = investmentAmount * REFERRAL_BONUS_RATE;
+        // ── $300 CAP CHECK ──
+        // Sum all previously approved deposits from this member (excluding current one)
+        const REFERRAL_CAP = 300;
+        const previousDepositsAgg = await (await import('../models/Deposit.js')).default.aggregate([
+            {
+                $match: {
+                    userId: investor._id,
+                    status: 'approved',
+                }
+            },
+            {
+                $group: { _id: null, total: { $sum: '$amount' } }
+            }
+        ]);
 
-        if (commissionAmount > 0) {
-            // Auto-credit directly to referrer's balance
-            referrer.balance = (referrer.balance || 0) + commissionAmount;
-            referrer.teamIncome = (referrer.teamIncome || 0) + commissionAmount;
-            referrer.teamEarnings = (referrer.teamEarnings || 0) + commissionAmount;
-            referrer.bonusIncome = (referrer.bonusIncome || 0) + commissionAmount;
-            await referrer.save();
+        // Total approved deposits INCLUDING the current one (already credited before this call)
+        const totalDeposited = previousDepositsAgg.length > 0 ? previousDepositsAgg[0].total : investmentAmount;
 
-            // Save commission record as already claimed (auto-credited)
-            const commissionRecord = await Commission.create({
-                fromUser: investor._id,
-                toUser: referrer._id,
-                amount: commissionAmount,
-                level: level,
-                investmentAmount: investmentAmount,
-                percentage: REFERRAL_BONUS_RATE * 100,
-                vipLevel: referrer.vipLevel,
-                claimed: true,
-                claimedAt: new Date()
-            });
+        // How much was deposited BEFORE this deposit
+        const depositedBefore = totalDeposited - investmentAmount;
 
-            // Notify the referrer
-            await createNotification({
-                userId: referrer._id,
-                title: 'Referral Bonus Received!',
-                message: `You earned $${commissionAmount.toFixed(2)} referral bonus from your direct member's $${investmentAmount} investment.`,
-                type: 'commission',
-                amount: commissionAmount
-            });
-
-            commissions.push(commissionRecord);
+        if (depositedBefore >= REFERRAL_CAP) {
+            // Already past the $300 cap — no bonus at all
+            console.log(`[Commission] SKIPPED — ${investor.email || investor.phone} already deposited $${depositedBefore.toFixed(2)} (cap: $${REFERRAL_CAP}). Referrer: ${referrer.email || referrer.phone}`);
+            continue;
         }
+
+        // How much of this deposit is still within the cap
+        const eligibleAmount = Math.min(investmentAmount, REFERRAL_CAP - depositedBefore);
+
+        const commissionAmount = parseFloat((eligibleAmount * REFERRAL_BONUS_RATE).toFixed(2));
+
+        if (commissionAmount <= 0) continue;
+
+        if (depositedBefore + investmentAmount > REFERRAL_CAP) {
+            console.log(`[Commission] PARTIAL cap — eligible $${eligibleAmount.toFixed(2)} of $${investmentAmount} (prev: $${depositedBefore.toFixed(2)}, cap: $${REFERRAL_CAP})`);
+        }
+
+        // Auto-credit directly to referrer's balance
+        referrer.balance = (referrer.balance || 0) + commissionAmount;
+        referrer.teamIncome = (referrer.teamIncome || 0) + commissionAmount;
+        referrer.teamEarnings = (referrer.teamEarnings || 0) + commissionAmount;
+        referrer.bonusIncome = (referrer.bonusIncome || 0) + commissionAmount;
+        await referrer.save();
+
+        // Save commission record as already claimed (auto-credited)
+        const commissionRecord = await Commission.create({
+            fromUser: investor._id,
+            toUser: referrer._id,
+            amount: commissionAmount,
+            level: level,
+            investmentAmount: eligibleAmount,
+            percentage: REFERRAL_BONUS_RATE * 100,
+            vipLevel: referrer.vipLevel,
+            claimed: true,
+            claimedAt: new Date()
+        });
+
+        // Notify the referrer
+        const capNote = eligibleAmount < investmentAmount
+            ? ` (capped at $${REFERRAL_CAP} total per member)`
+            : '';
+        await createNotification({
+            userId: referrer._id,
+            title: 'Referral Bonus Received!',
+            message: `You earned $${commissionAmount.toFixed(2)} referral bonus from your direct member's $${eligibleAmount.toFixed(2)} deposit${capNote}.`,
+            type: 'commission',
+            amount: commissionAmount
+        });
+
+        commissions.push(commissionRecord);
     }
 
     return commissions;
 }
+
 
 // Keep for backward compatibility (not actively used for rates anymore)
 export function calculateCommission(vipLevel, teamLevel, investmentAmount) {
