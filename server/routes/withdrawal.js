@@ -90,8 +90,8 @@ router.post('/request', authMiddleware, async (req, res) => {
         }
 
         // Validate amount
-        if (!amount || amount < 50) {
-            return res.status(400).json({ message: 'Minimum withdrawal amount is $50' });
+        if (!amount || amount < 20) {
+            return res.status(400).json({ message: 'Minimum withdrawal amount is $20' });
         }
 
         // Calculate fee based on payment method: TRC20 = 10%, BSC = 5%
