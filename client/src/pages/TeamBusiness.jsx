@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Briefcase, Users, DollarSign, TrendingUp, Search } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, DollarSign, TrendingUp, Search, ChevronDown, ChevronUp, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import BottomNav from '../components/BottomNav';
 
 const TeamBusiness = () => {
@@ -9,6 +9,7 @@ const TeamBusiness = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [expandedId, setExpandedId] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -58,6 +59,11 @@ const TeamBusiness = () => {
         );
     });
 
+    const fmt = (n) => `$${(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    // Grand total withdrawal across all team
+    const teamTotalWithdraw = activePartners.reduce((sum, p) => sum + (p.teamWithdraw || 0), 0);
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-300 pb-24">
             {/* Header */}
@@ -81,7 +87,7 @@ const TeamBusiness = () => {
             </div>
 
             <div className="max-w-md mx-auto px-4 mt-5 space-y-4">
-                {/* Summary Cards */}
+                {/* Summary Cards — 2×2 grid */}
                 <div className="grid grid-cols-2 gap-4">
                     {/* Total Members */}
                     <div className="bg-white dark:bg-dark-200 rounded-2xl p-4 border border-amber-200 dark:border-amber-500/20 shadow-md">
@@ -98,15 +104,29 @@ const TeamBusiness = () => {
                     {/* Total Deposit */}
                     <div className="bg-white dark:bg-dark-200 rounded-2xl p-4 border border-amber-200 dark:border-amber-500/20 shadow-md">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="p-1.5 bg-amber-100 dark:bg-amber-500/10 rounded-lg">
-                                <DollarSign size={14} className="text-amber-600 dark:text-amber-400" />
+                            <div className="p-1.5 bg-green-100 dark:bg-green-500/10 rounded-lg">
+                                <ArrowDownLeft size={14} className="text-green-600 dark:text-green-400" />
                             </div>
                             <p className="text-gray-500 dark:text-white/50 text-[9px] font-black uppercase tracking-widest">Team Deposit</p>
                         </div>
-                        <h3 className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tighter">
-                            ${(data.teamTotalDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <h3 className="text-xl font-black text-green-600 dark:text-green-400 tracking-tighter">
+                            {fmt(data.teamTotalDeposit)}
                         </h3>
                         <p className="text-gray-400 dark:text-white/30 text-[9px] font-bold mt-1 uppercase">Approved Deposits</p>
+                    </div>
+
+                    {/* Total Withdraw */}
+                    <div className="col-span-2 bg-white dark:bg-dark-200 rounded-2xl p-4 border border-rose-200 dark:border-rose-500/20 shadow-md">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="p-1.5 bg-rose-100 dark:bg-rose-500/10 rounded-lg">
+                                <ArrowUpRight size={14} className="text-rose-600 dark:text-rose-400" />
+                            </div>
+                            <p className="text-gray-500 dark:text-white/50 text-[9px] font-black uppercase tracking-widest">Team Withdrawal</p>
+                        </div>
+                        <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tighter">
+                            {fmt(teamTotalWithdraw)}
+                        </h3>
+                        <p className="text-gray-400 dark:text-white/30 text-[9px] font-bold mt-1 uppercase">Approved Withdrawals (All Team)</p>
                     </div>
                 </div>
 
@@ -141,41 +161,118 @@ const TeamBusiness = () => {
                             {activePartners.map((partner, idx) => {
                                 const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
                                 const initials = partner.fullName?.charAt(0).toUpperCase() || '?';
-                                // Gradient intensity by rank
                                 const avatarColors = [
                                     'bg-amber-400 text-white',
                                     'bg-slate-400 text-white',
                                     'bg-orange-400 text-white',
                                 ];
                                 const avatarColor = avatarColors[idx] || 'bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white';
+                                const isExpanded = expandedId === partner._id;
 
                                 return (
-                                    <div key={partner._id} className="flex items-center justify-between px-5 py-3.5 hover:bg-amber-50/50 dark:hover:bg-white/2 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            {/* Rank */}
-                                            <span className="text-base w-7 text-center flex-shrink-0">{medal}</span>
-                                            {/* Avatar */}
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm ${avatarColor}`}>
-                                                {initials}
+                                    <div key={partner._id}>
+                                        {/* Main Row — tap to expand */}
+                                        <button
+                                            onClick={() => setExpandedId(isExpanded ? null : partner._id)}
+                                            className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-amber-50/50 dark:hover:bg-white/2 transition-colors text-left"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {/* Rank */}
+                                                <span className="text-base w-7 text-center flex-shrink-0">{medal}</span>
+                                                {/* Avatar */}
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0 shadow-sm ${avatarColor}`}>
+                                                    {initials}
+                                                </div>
+                                                {/* Name & sub count */}
+                                                <div>
+                                                    <p className="text-gray-900 dark:text-white font-black text-sm leading-tight">
+                                                        {partner.fullName || partner.email || partner.phone}
+                                                    </p>
+                                                    <p className="text-gray-400 dark:text-white/40 text-[9px] font-bold mt-0.5">
+                                                        {partner.subTeamSize} sub-member{partner.subTeamSize !== 1 ? 's' : ''}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            {/* Name & sub count */}
-                                            <div>
-                                                <p className="text-gray-900 dark:text-white font-black text-sm leading-tight">
-                                                    {partner.fullName || partner.email || partner.phone}
-                                                </p>
-                                                <p className="text-gray-400 dark:text-white/40 text-[9px] font-bold mt-0.5">
-                                                    {partner.subTeamSize} sub-member{partner.subTeamSize !== 1 ? 's' : ''}
-                                                </p>
-                                            </div>
-                                        </div>
 
-                                        {/* Amount */}
-                                        <div className="text-right flex-shrink-0">
-                                            <p className="text-gray-900 dark:text-white font-black text-sm">
-                                                ${(partner.teamDeposit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </p>
-                                            <p className="text-amber-500 text-[9px] font-black uppercase">team biz</p>
-                                        </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                {/* Deposit & Withdraw summary */}
+                                                <div className="text-right">
+                                                    <p className="text-green-600 dark:text-green-400 font-black text-sm">
+                                                        {fmt(partner.teamDeposit)}
+                                                    </p>
+                                                    <p className="text-rose-500 dark:text-rose-400 font-bold text-[11px]">
+                                                        -{fmt(partner.teamWithdraw)}
+                                                    </p>
+                                                </div>
+                                                {isExpanded
+                                                    ? <ChevronUp size={15} className="text-gray-400 dark:text-white/30" />
+                                                    : <ChevronDown size={15} className="text-gray-400 dark:text-white/30" />
+                                                }
+                                            </div>
+                                        </button>
+
+                                        {/* Expanded Details Panel */}
+                                        {isExpanded && (
+                                            <div className="bg-gray-50 dark:bg-dark-300/50 border-t border-gray-100 dark:border-white/5 px-5 py-4 space-y-4">
+
+                                                {/* Gen1 Partner's own stats */}
+                                                <div>
+                                                    <p className="text-[9px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2">
+                                                        📌 Partner (Self)
+                                                    </p>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="bg-white dark:bg-dark-200 rounded-xl p-3 border border-green-100 dark:border-green-500/10">
+                                                            <p className="text-[9px] font-black text-gray-400 dark:text-white/30 uppercase mb-1">Deposit</p>
+                                                            <p className="text-green-600 dark:text-green-400 font-black text-sm">{fmt(partner.teamDeposit)}</p>
+                                                            <p className="text-[8px] text-gray-400 dark:text-white/20 mt-0.5">Entire Sub-tree</p>
+                                                        </div>
+                                                        <div className="bg-white dark:bg-dark-200 rounded-xl p-3 border border-rose-100 dark:border-rose-500/10">
+                                                            <p className="text-[9px] font-black text-gray-400 dark:text-white/30 uppercase mb-1">Own Withdraw</p>
+                                                            <p className="text-rose-500 dark:text-rose-400 font-black text-sm">{fmt(partner.partnerOwnWithdraw)}</p>
+                                                            <p className="text-[8px] text-gray-400 dark:text-white/20 mt-0.5">Approved Only</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Gen2 (sub-members) Withdraw Details */}
+                                                {partner.gen2WithdrawDetails && partner.gen2WithdrawDetails.length > 0 && (
+                                                    <div>
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 dark:text-white/40 mb-2">
+                                                            👥 Gen 1 Sub-members Withdrawal
+                                                        </p>
+                                                        <div className="space-y-1.5">
+                                                            {partner.gen2WithdrawDetails.map((member) => (
+                                                                <div
+                                                                    key={member._id}
+                                                                    className="flex items-center justify-between bg-white dark:bg-dark-200 rounded-xl px-3 py-2.5 border border-gray-100 dark:border-white/5"
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center text-[11px] font-black text-rose-600 dark:text-rose-400 flex-shrink-0">
+                                                                            {(member.fullName || member.email || member.phone || '?').charAt(0).toUpperCase()}
+                                                                        </div>
+                                                                        <p className="text-gray-800 dark:text-white/80 font-bold text-xs">
+                                                                            {member.fullName || member.email || member.phone}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <p className="text-rose-500 dark:text-rose-400 font-black text-sm">{fmt(member.withdraw)}</p>
+                                                                        <p className="text-[8px] text-gray-400 dark:text-white/20">withdrawn</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Team Total Summary row */}
+                                                <div className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/10 px-4 py-3">
+                                                    <p className="text-amber-700 dark:text-amber-400 font-black text-[10px] uppercase tracking-widest">Net Team Business</p>
+                                                    <p className="text-amber-700 dark:text-amber-400 font-black text-sm">
+                                                        {fmt(partner.teamDeposit - (partner.teamWithdraw || 0))}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

@@ -198,11 +198,12 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             // ── Per-partner breakdown ──
             // For each Gen1 partner, calculate deposit of:
             //   partner themselves + all their Gen2 + all their Gen3
+            // Also calculate withdrawal for Gen1 partner + their sub-team
             partnerBreakdown = await Promise.all(gen1Users.map(async (partner) => {
                 // Find Gen2 under this partner
                 const partnerGen2 = await User.find(
                     { referredBy: partner.invitationCode },
-                    '_id invitationCode'
+                    '_id invitationCode fullName email phone'
                 );
                 const partnerGen2Codes = partnerGen2.map(u => u.invitationCode);
 
@@ -218,10 +219,39 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                     ...partnerGen3.map(u => u._id)
                 ];
 
+                // Total deposits for this partner's sub-tree
                 const partnerDepAgg = await Deposit.aggregate([
                     { $match: { userId: { $in: partnerSubIds }, status: 'approved' } },
                     { $group: { _id: null, total: { $sum: '$amount' } } }
                 ]);
+
+                // ── Withdrawal data: Gen1 partner + their direct sub-members ──
+                // Total withdraw for partner themselves + Gen2 + Gen3
+                const partnerWithdrawAgg = await Withdrawal.aggregate([
+                    { $match: { userId: { $in: partnerSubIds }, status: 'approved' } },
+                    { $group: { _id: '$userId', total: { $sum: '$amount' } } }
+                ]);
+
+                // Build a map: userId → withdrawAmount
+                const withdrawByUser = {};
+                partnerWithdrawAgg.forEach(w => {
+                    withdrawByUser[w._id.toString()] = w.total;
+                });
+
+                // Gen1 partner's own withdrawal
+                const partnerOwnWithdraw = withdrawByUser[partner._id.toString()] || 0;
+
+                // Gen2 members withdraw details (direct sub-members of this Gen1 partner)
+                const gen2WithdrawDetails = partnerGen2.map(g2 => ({
+                    _id: g2._id,
+                    fullName: g2.fullName,
+                    email: g2.email,
+                    phone: g2.phone,
+                    withdraw: withdrawByUser[g2._id.toString()] || 0
+                })).filter(m => m.withdraw > 0);
+
+                // Total withdraw for entire sub-tree (partner + gen2 + gen3)
+                const teamWithdraw = partnerWithdrawAgg.reduce((sum, w) => sum + w.total, 0);
 
                 return {
                     _id: partner._id,
@@ -229,6 +259,9 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                     email: partner.email,
                     phone: partner.phone,
                     teamDeposit: partnerDepAgg[0]?.total || 0,
+                    teamWithdraw,                        // total withdraw of entire sub-tree
+                    partnerOwnWithdraw,                  // this Gen1 partner's own withdraw
+                    gen2WithdrawDetails,                 // Gen2 member-wise withdraw
                     subTeamSize: partnerSubIds.length - 1  // exclude partner themselves
                 };
             }));
