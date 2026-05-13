@@ -61,8 +61,8 @@ const TeamBusiness = () => {
 
     const fmt = (n) => `$${(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Grand total withdrawal across all team
-    const teamTotalWithdraw = activePartners.reduce((sum, p) => sum + (p.teamWithdraw || 0), 0);
+    // Grand total withdrawal: server-calculated (user + entire team Gen1+2+3)
+    const teamTotalWithdraw = data.teamTotalWithdraw || 0;
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-300 pb-24">

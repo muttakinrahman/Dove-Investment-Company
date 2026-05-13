@@ -181,19 +181,32 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         if (user.canViewTeamBusiness) {
             teamBusinessEnabled = true;
 
-            // Collect all team member IDs (Gen 1 + 2 + 3)
+            // Collect all team member IDs: the user themselves + Gen 1 + 2 + 3
             const allMemberIds = [
+                user._id,                              // ✅ include the user themselves
                 ...gen1Users.map(u => u._id),
                 ...gen2Users.map(u => u._id),
                 ...gen3Users.map(u => u._id)
             ];
 
-            // Sum all approved deposits from team members (grand total)
+            // Sum all approved deposits from team members (grand total, excluding user themselves)
+            const teamOnlyIds = [
+                ...gen1Users.map(u => u._id),
+                ...gen2Users.map(u => u._id),
+                ...gen3Users.map(u => u._id)
+            ];
             const depositAgg = await Deposit.aggregate([
-                { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
+                { $match: { userId: { $in: teamOnlyIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
             ]);
             teamTotalDeposit = depositAgg[0]?.total || 0;
+
+            // Sum all approved withdrawals: user themselves + entire team (Gen 1+2+3)
+            const withdrawAgg = await Withdrawal.aggregate([
+                { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
+                { $group: { _id: null, total: { $sum: '$amount' } } }
+            ]);
+            const teamTotalWithdraw = withdrawAgg[0]?.total || 0;
 
             // ── Per-partner breakdown ──
             // For each Gen1 partner, calculate deposit of:
@@ -270,7 +283,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             partnerBreakdown.sort((a, b) => b.teamDeposit - a.teamDeposit);
         }
 
-        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit, partnerBreakdown });
+        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit, teamTotalWithdraw: teamTotalWithdraw || 0, partnerBreakdown });
 
     } catch (error) {
         console.error('Team list error:', error);
