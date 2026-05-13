@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Wallet, AlertCircle, Bell, HelpCircle, CheckCircle2, Lock, Shield, Users, TrendingUp, Info, XCircle } from 'lucide-react';
+import { ArrowLeft, Wallet, AlertCircle, Bell, HelpCircle, CheckCircle2, Lock, Shield, Users, TrendingUp, Info, XCircle, Clock, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import SuccessModal from '../components/SuccessModal';
@@ -19,6 +19,7 @@ const Withdraw = () => {
     const [countdown, setCountdown] = useState(0);
     const [eligibility, setEligibility] = useState(null);
     const [eligibilityLoading, setEligibilityLoading] = useState(true);
+    const [pendingPopup, setPendingPopup] = useState(null); // { amount, createdAt }
 
     useEffect(() => {
         let timer;
@@ -132,7 +133,10 @@ const Withdraw = () => {
             fetchEligibility(); // Refresh eligibility after submission
         } catch (error) {
             const errData = error.response?.data;
-            if (errData?.code === 'INSUFFICIENT_REFERRALS') {
+            if (errData?.code === 'PENDING_WITHDRAWAL_EXISTS') {
+                // Show the professional pending popup instead of a toast
+                setPendingPopup(errData.pendingWithdrawal);
+            } else if (errData?.code === 'INSUFFICIENT_REFERRALS') {
                 toast.error(`❌ You need 3 active referrals to continue! You have ${errData.activeReferrals}.`);
             } else if (errData?.code === 'INSUFFICIENT_RESERVE') {
                 toast.error(`❌ Must keep $50 in account. Max: $${errData.maxWithdrawable}`);
@@ -474,6 +478,106 @@ const Withdraw = () => {
                 title="Withdrawal Requested!"
                 message={`Your withdrawal request for $${amount} has been submitted successfully.`}
             />
+
+            {/* ====== PENDING WITHDRAWAL POPUP ====== */}
+            {pendingPopup && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center px-4"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+                    onClick={() => setPendingPopup(null)}
+                >
+                    <div
+                        className="relative w-full max-w-sm bg-white dark:bg-dark-200 rounded-3xl overflow-hidden shadow-2xl"
+                        style={{ animation: 'popupIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Top gradient bar */}
+                        <div className="h-1.5 w-full bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500" />
+
+                        {/* Close button */}
+                        <button
+                            onClick={() => setPendingPopup(null)}
+                            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                        >
+                            <X size={16} />
+                        </button>
+
+                        <div className="px-6 pt-7 pb-7 space-y-5">
+                            {/* Icon */}
+                            <div className="flex justify-center">
+                                <div className="relative">
+                                    <div className="w-20 h-20 rounded-full bg-yellow-400/15 flex items-center justify-center">
+                                        <div className="w-14 h-14 rounded-full bg-yellow-400/25 flex items-center justify-center">
+                                            <Clock size={32} className="text-yellow-400" />
+                                        </div>
+                                    </div>
+                                    {/* Pulse ring */}
+                                    <span className="absolute inset-0 rounded-full border-2 border-yellow-400/40" style={{ animation: 'ping 1.8s ease-in-out infinite' }} />
+                                </div>
+                            </div>
+
+                            {/* Title */}
+                            <div className="text-center space-y-1.5">
+                                <h2 className="text-gray-900 dark:text-white font-black text-xl tracking-tight">
+                                    Withdrawal Pending
+                                </h2>
+                                <p className="text-gray-500 dark:text-white/50 text-sm leading-relaxed">
+                                    You already have an active withdrawal request under review. A new request cannot be submitted until the current one is resolved.
+                                </p>
+                            </div>
+
+                            {/* Pending details card */}
+                            <div className="bg-yellow-400/8 border border-yellow-400/25 rounded-2xl p-4 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500 dark:text-white/50 font-semibold uppercase tracking-wider">Pending Amount</span>
+                                    <span className="text-yellow-500 font-black text-lg">${pendingPopup.amount?.toFixed ? pendingPopup.amount.toFixed(2) : pendingPopup.amount}</span>
+                                </div>
+                                <div className="h-px bg-yellow-400/15" />
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500 dark:text-white/50 font-semibold uppercase tracking-wider">Submitted On</span>
+                                    <span className="text-gray-700 dark:text-white/80 text-xs font-bold">
+                                        {pendingPopup.createdAt ? new Date(pendingPopup.createdAt).toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="h-px bg-yellow-400/15" />
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-yellow-400" style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
+                                    <span className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold">Status: Processing — under admin review</span>
+                                </div>
+                            </div>
+
+                            {/* Info note */}
+                            <div className="flex items-start gap-2.5 bg-blue-500/8 border border-blue-500/20 rounded-xl p-3">
+                                <Info size={15} className="text-blue-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-blue-400 text-xs leading-relaxed">
+                                    Withdrawals are typically processed within <strong>72–96 hours</strong>. Once your current request is approved or rejected, you'll be able to submit a new one.
+                                </p>
+                            </div>
+
+                            {/* OK Button */}
+                            <button
+                                onClick={() => setPendingPopup(null)}
+                                className="w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-[0.97] shadow-lg"
+                                style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)', color: '#1a1a1a' }}
+                            >
+                                Got it, I'll Wait
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes popupIn {
+                            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+                            to   { opacity: 1; transform: scale(1)   translateY(0);    }
+                        }
+                        @keyframes ping {
+                            0%, 100% { transform: scale(1);    opacity: 0.6; }
+                            50%       { transform: scale(1.18); opacity: 0;   }
+                        }
+                    `}</style>
+                </div>
+            )}
+            {/* ====== END PENDING WITHDRAWAL POPUP ====== */}
         </div>
     );
 };

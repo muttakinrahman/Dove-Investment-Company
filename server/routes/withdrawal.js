@@ -33,6 +33,20 @@ router.post('/request', authMiddleware, async (req, res) => {
             });
         }
 
+        // Check if user already has a pending withdrawal
+        const existingPending = await Withdrawal.findOne({ userId, status: 'pending' });
+        if (existingPending) {
+            return res.status(400).json({
+                message: 'You already have a pending withdrawal request. Please wait for it to be processed before submitting a new one.',
+                code: 'PENDING_WITHDRAWAL_EXISTS',
+                pendingWithdrawal: {
+                    id: existingPending._id,
+                    amount: existingPending.amount,
+                    createdAt: existingPending.createdAt
+                }
+            });
+        }
+
         // 2FA Verification if enabled
         if (user.twoFactorEnabled) {
             if (!twoFactorToken) {
