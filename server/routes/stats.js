@@ -176,6 +176,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         // ==========================================
         let teamBusinessEnabled = false;
         let teamTotalDeposit = 0;
+        let teamTotalWithdraw = 0;
         let partnerBreakdown = [];
 
         if (user.canViewTeamBusiness) {
@@ -206,7 +207,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                 { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
             ]);
-            const teamTotalWithdraw = withdrawAgg[0]?.total || 0;
+            teamTotalWithdraw = withdrawAgg[0]?.total || 0;
 
             // ── Per-partner breakdown ──
             // For each Gen1 partner, calculate deposit of:
@@ -283,7 +284,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             partnerBreakdown.sort((a, b) => b.teamDeposit - a.teamDeposit);
         }
 
-        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit, teamTotalWithdraw: teamTotalWithdraw || 0, partnerBreakdown });
+        res.json({ gen1, gen2, gen3, total, activeCount, teamBusinessEnabled, teamTotalDeposit, teamTotalWithdraw, partnerBreakdown });
 
     } catch (error) {
         console.error('Team list error:', error);
