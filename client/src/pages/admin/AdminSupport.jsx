@@ -6,8 +6,10 @@ import {
     User,
     Search,
     Clock,
-    CheckCheck,
-    ArrowLeft
+    ArrowLeft,
+    Plus,
+    X,
+    Loader
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,15 +22,26 @@ const AdminSupport = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const chatEndRef = useRef(null);
 
+    // New conversation modal state
+    const [showNewModal, setShowNewModal] = useState(false);
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    const [userSearchResults, setUserSearchResults] = useState([]);
+    const [selectedNewUser, setSelectedNewUser] = useState(null);
+    const [newConvMessage, setNewConvMessage] = useState('');
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [sendingNew, setSendingNew] = useState(false);
+    const searchTimeout = useRef(null);
+
     const scrollToBottom = () => {
         chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+    const getToken = () => localStorage.getItem('token');
+
     const fetchConversations = async () => {
         try {
-            const token = localStorage.getItem('token');
             const res = await axios.get('/api/support/admin/conversations', {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${getToken()}` }
             });
             setConversations(res.data);
         } catch (error) {
@@ -38,9 +51,8 @@ const AdminSupport = () => {
 
     const fetchMessages = async (userId) => {
         try {
-            const token = localStorage.getItem('token');
             const res = await axios.get(`/api/support/admin/messages/${userId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${getToken()}` }
             });
             setMessages(res.data);
         } catch (error) {
@@ -52,17 +64,13 @@ const AdminSupport = () => {
         fetchConversations();
         const interval = setInterval(() => {
             fetchConversations();
-            if (selectedUser) {
-                fetchMessages(selectedUser._id);
-            }
+            if (selectedUser) fetchMessages(selectedUser._id);
         }, 5000);
         return () => clearInterval(interval);
     }, [selectedUser]);
 
     useEffect(() => {
-        if (selectedUser) {
-            scrollToBottom();
-        }
+        if (selectedUser) scrollToBottom();
     }, [messages]);
 
     const handleSelectUser = (conv) => {
@@ -73,21 +81,66 @@ const AdminSupport = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedUser) return;
-
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             const res = await axios.post('/api/support/admin/reply',
                 { userId: selectedUser._id, message: newMessage },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${getToken()}` } }
             );
             setMessages([...messages, res.data]);
             setNewMessage('');
-            fetchConversations(); // Update last message in list
+            fetchConversations();
         } catch (error) {
             console.error('Send reply error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // ── New Conversation: search users ──
+    const handleUserSearch = (val) => {
+        setUserSearchQuery(val);
+        setSelectedNewUser(null);
+        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+        if (val.trim().length < 2) { setUserSearchResults([]); return; }
+        setSearchLoading(true);
+        searchTimeout.current = setTimeout(async () => {
+            try {
+                const res = await axios.get(`/api/support/admin/search-users?q=${encodeURIComponent(val.trim())}`, {
+                    headers: { Authorization: `Bearer ${getToken()}` }
+                });
+                setUserSearchResults(res.data);
+            } catch (err) {
+                console.error('User search error:', err);
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 400);
+    };
+
+    const handleStartConversation = async (e) => {
+        e.preventDefault();
+        if (!selectedNewUser || !newConvMessage.trim()) return;
+        setSendingNew(true);
+        try {
+            await axios.post('/api/support/admin/start-conversation',
+                { userId: selectedNewUser._id, message: newConvMessage },
+                { headers: { Authorization: `Bearer ${getToken()}` } }
+            );
+            // Open this user's chat
+            setSelectedUser({ ...selectedNewUser });
+            fetchMessages(selectedNewUser._id);
+            fetchConversations();
+            // Close modal & reset
+            setShowNewModal(false);
+            setUserSearchQuery('');
+            setUserSearchResults([]);
+            setSelectedNewUser(null);
+            setNewConvMessage('');
+        } catch (err) {
+            console.error('Start conversation error:', err);
+        } finally {
+            setSendingNew(false);
         }
     };
 
@@ -100,10 +153,127 @@ const AdminSupport = () => {
 
     return (
         <div className="h-[calc(100vh-160px)] flex flex-col md:flex-row gap-6">
-            {/* Conversations List */}
+
+            {/* ─── New Conversation Modal ─── */}
+            {showNewModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+                    <div className="bg-white dark:bg-dark-200 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/5">
+                            <div className="flex items-center gap-2">
+                                <Plus size={18} className="text-primary" />
+                                <h3 className="font-bold text-gray-900 dark:text-white">New Message</h3>
+                            </div>
+                            <button onClick={() => setShowNewModal(false)} className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                                <X size={18} className="text-gray-500 dark:text-white/50" />
+                            </button>
+                        </div>
+
+                        <div className="p-5 space-y-4">
+                            {/* User Search */}
+                            <div>
+                                <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-white/40 mb-2 block">Search User</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30" size={15} />
+                                    <input
+                                        type="text"
+                                        placeholder="Name, phone or email..."
+                                        value={userSearchQuery}
+                                        onChange={(e) => handleUserSearch(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-9 pr-4 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
+                                        autoFocus
+                                    />
+                                    {searchLoading && (
+                                        <Loader size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" />
+                                    )}
+                                </div>
+
+                                {/* Search Results */}
+                                {userSearchResults.length > 0 && !selectedNewUser && (
+                                    <div className="mt-2 bg-white dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-xl max-h-48 overflow-y-auto">
+                                        {userSearchResults.map(u => (
+                                            <button
+                                                key={u._id}
+                                                onClick={() => { setSelectedNewUser(u); setUserSearchQuery(u.fullName || u.phone || u.email); setUserSearchResults([]); }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-primary/5 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0 text-left"
+                                            >
+                                                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0 overflow-hidden">
+                                                    {u.profileImage
+                                                        ? <img src={u.profileImage} alt="" className="w-full h-full object-cover" />
+                                                        : <User size={18} />
+                                                    }
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{u.fullName || '—'}</p>
+                                                    <p className="text-[10px] text-primary font-semibold">{u.phone || u.email}</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Selected User Badge */}
+                                {selectedNewUser && (
+                                    <div className="mt-2 flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-2.5">
+                                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0 overflow-hidden">
+                                            {selectedNewUser.profileImage
+                                                ? <img src={selectedNewUser.profileImage} alt="" className="w-full h-full object-cover" />
+                                                : <User size={16} />
+                                            }
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-black text-gray-900 dark:text-white truncate">{selectedNewUser.fullName || '—'}</p>
+                                            <p className="text-[10px] text-primary font-semibold">{selectedNewUser.phone || selectedNewUser.email}</p>
+                                        </div>
+                                        <button onClick={() => { setSelectedNewUser(null); setUserSearchQuery(''); }} className="p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors">
+                                            <X size={13} className="text-red-500" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Message Input */}
+                            <div>
+                                <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-white/40 mb-2 block">Message</label>
+                                <textarea
+                                    rows={4}
+                                    value={newConvMessage}
+                                    onChange={(e) => setNewConvMessage(e.target.value)}
+                                    placeholder="Type your message here..."
+                                    className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-xl py-3 px-4 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50 resize-none"
+                                />
+                            </div>
+
+                            {/* Send Button */}
+                            <button
+                                onClick={handleStartConversation}
+                                disabled={!selectedNewUser || !newConvMessage.trim() || sendingNew}
+                                className={`w-full py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${selectedNewUser && newConvMessage.trim() && !sendingNew
+                                    ? 'bg-primary text-black shadow-lg shadow-primary/20 hover:opacity-90'
+                                    : 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-white/20 cursor-not-allowed'
+                                    }`}
+                            >
+                                {sendingNew ? <Loader size={16} className="animate-spin" /> : <Send size={16} />}
+                                {sendingNew ? 'Sending...' : 'Send Message'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Conversations List ─── */}
             <div className={`w-full md:w-80 flex flex-col bg-white dark:bg-dark-200 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ${selectedUser ? 'hidden md:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-slate-200 dark:border-white/5">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Support Chats</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Support Chats</h2>
+                        <button
+                            onClick={() => setShowNewModal(true)}
+                            className="flex items-center gap-1.5 bg-primary text-black text-xs font-bold px-3 py-1.5 rounded-xl hover:opacity-90 transition-all shadow-md shadow-primary/20"
+                        >
+                            <Plus size={13} />
+                            New Message
+                        </button>
+                    </div>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/20 dark:text-white/20" size={16} />
                         <input
@@ -152,7 +322,7 @@ const AdminSupport = () => {
                 </div>
             </div>
 
-            {/* Chat Window */}
+            {/* ─── Chat Window ─── */}
             <div className={`flex-1 flex flex-col bg-white dark:bg-dark-200 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ${selectedUser ? 'flex' : 'hidden md:flex'}`}>
                 {selectedUser ? (
                     <>

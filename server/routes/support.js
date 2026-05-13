@@ -146,4 +146,66 @@ router.post('/admin/reply', authMiddleware, async (req, res) => {
     }
 });
 
+// Admin: Search users (to start a new conversation)
+router.get('/admin/search-users', authMiddleware, async (req, res) => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (adminUser?.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const { q } = req.query;
+        if (!q || q.trim().length < 2) {
+            return res.status(400).json({ message: 'Query must be at least 2 characters' });
+        }
+        const regex = new RegExp(q.trim(), 'i');
+        const users = await User.find({
+            $or: [
+                { fullName: regex },
+                { phone: regex },
+                { email: regex }
+            ]
+        }, '_id fullName phone email profileImage').limit(10);
+        res.json(users);
+    } catch (error) {
+        console.error('Search users error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin: Start a new conversation with any user (initiate from admin side)
+router.post('/admin/start-conversation', authMiddleware, async (req, res) => {
+    try {
+        const adminUser = await User.findById(req.userId);
+        if (adminUser?.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        const { userId, message } = req.body;
+        if (!userId || !message) {
+            return res.status(400).json({ message: 'User ID and message are required' });
+        }
+        const targetUser = await User.findById(userId);
+        if (!targetUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const newMessage = new SupportMessage({
+            userId,
+            senderId: req.userId,
+            message,
+            isAdmin: true
+        });
+        await newMessage.save();
+        // Notify the user
+        await createNotification({
+            userId,
+            title: '📩 New Message from Admin',
+            message: message.length > 80 ? message.substring(0, 80) + '...' : message,
+            type: 'system'
+        });
+        res.status(201).json({ success: true, newMessage });
+    } catch (error) {
+        console.error('Start conversation error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;
