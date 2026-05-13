@@ -708,15 +708,19 @@ router.post('/user/:id/release-lend', authMiddleware, adminMiddleware, async (re
         user.investments.forEach(inv => {
             if (inv.status !== 'active') return;
             // If investmentId provided, only release that specific one
-            if (investmentId && inv._id.toString() !== investmentId) return;
+            if (investmentId && inv._id.toString() !== investmentId.toString()) return;
+
+            // Safety: ensure package and investmentAmount exist
+            const principal = parseFloat(inv.package?.investmentAmount) || 0;
+            if (principal <= 0) return; // skip if no valid amount
 
             inv.status = 'cancelled';
-            user.balance += inv.package.investmentAmount;
-            totalReleased += inv.package.investmentAmount;
+            user.balance += principal;
+            totalReleased += principal;
             released.push({
-                id: inv._id,
-                name: inv.package.name,
-                amount: inv.package.investmentAmount
+                id: inv._id.toString(),
+                name: inv.package?.name || 'Unknown Package',
+                amount: principal
             });
         });
 
@@ -731,7 +735,7 @@ router.post('/user/:id/release-lend', authMiddleware, adminMiddleware, async (re
             userId: user._id,
             title: 'Lend Released by Admin',
             message: `Your lend investment(s) (${released.map(r => r.name).join(', ')}) have been released by Admin. $${totalReleased.toFixed(2)} has been returned to your available balance.`,
-            type: 'investment',
+            type: 'system',
             amount: totalReleased
         });
 
@@ -740,8 +744,7 @@ router.post('/user/:id/release-lend', authMiddleware, adminMiddleware, async (re
             adminId: req.userId,
             action: 'lend_released_to_balance',
             targetUserId: user._id,
-            changes: { released, totalReleased, newBalance: user.balance },
-            description: `Admin released lend of $${totalReleased} to balance for user ${user.phone || user.email || user._id}`
+            description: `Admin released lend of $${totalReleased.toFixed(2)} to balance for user ${user.phone || user.email || user._id}`
         });
 
         res.json({
@@ -752,8 +755,8 @@ router.post('/user/:id/release-lend', authMiddleware, adminMiddleware, async (re
         });
 
     } catch (error) {
-        console.error('Release lend error:', error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[Release Lend] Error:', error.message, error.stack);
+        res.status(500).json({ message: `Server error: ${error.message}` });
     }
 });
 

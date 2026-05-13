@@ -32,7 +32,9 @@ const adminLogSchema = new mongoose.Schema({
             'manual_deposit',
             'admin_disabled_2fa',
             'team_business_view_enabled',
-            'team_business_view_disabled'
+            'team_business_view_disabled',
+            'lend_released_to_balance',
+            'deposit_revoked'
         ]
     },
     targetUserId: {
