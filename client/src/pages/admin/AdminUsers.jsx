@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound, Briefcase } from 'lucide-react';
+import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound, Briefcase, Coins, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminUsers = () => {
@@ -10,6 +10,11 @@ const AdminUsers = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [editForm, setEditForm] = useState({ balance: '', vipLevel: '' });
+    // Release Lend state
+    const [showLendModal, setShowLendModal] = useState(false);
+    const [lendUser, setLendUser] = useState(null);
+    const [releasingAll, setReleasingAll] = useState(false);
+    const [releasingId, setReleasingId] = useState(null);
 
     useEffect(() => {
         fetchUsers();
@@ -127,6 +132,42 @@ const AdminUsers = () => {
         } catch (error) {
             console.error('Error toggling team business view:', error);
             toast.error('Failed to update Team Business View');
+        }
+    };
+
+    // Release Lend handlers
+    const handleOpenLendModal = (user) => {
+        setLendUser({ ...user }); // clone to keep local active investments list
+        setShowLendModal(true);
+    };
+
+    const handleReleaseLend = async (investmentId = null) => {
+        if (!lendUser) return;
+        const confirm = window.confirm(
+            investmentId
+                ? 'Release this specific lend investment back to the user\'s balance?'
+                : 'Release ALL active lend investments back to the user\'s balance?'
+        );
+        if (!confirm) return;
+
+        if (investmentId) setReleasingId(investmentId);
+        else setReleasingAll(true);
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                `/api/admin/user/${lendUser._id}/release-lend`,
+                investmentId ? { investmentId } : {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(res.data.message);
+            setShowLendModal(false);
+            fetchUsers();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to release lend');
+        } finally {
+            setReleasingAll(false);
+            setReleasingId(null);
         }
     };
 
@@ -253,6 +294,16 @@ const AdminUsers = () => {
                                                 >
                                                     <Briefcase size={16} />
                                                 </button>
+                                                {/* Release Lend button — only if has active investments */}
+                                                {(user.investments || []).some(inv => inv.status === 'active') && (
+                                                    <button
+                                                        onClick={() => handleOpenLendModal(user)}
+                                                        className="p-2 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-colors"
+                                                        title="Release Lend to Balance"
+                                                    >
+                                                        <Coins size={16} />
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -311,6 +362,78 @@ const AdminUsers = () => {
                     </div>
                 </div>
             )}
+
+            {/* ====== Release Lend Modal ====== */}
+            {showLendModal && lendUser && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowLendModal(false)}>
+                    <div className="bg-white dark:bg-dark-200 rounded-2xl w-full max-w-md border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/10">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Coins size={18} className="text-amber-400" />
+                                    Release Lend to Balance
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-white/40 mt-0.5">
+                                    {lendUser.fullName || lendUser.phone} — Current Balance: <span className="text-green-400 font-bold">${(lendUser.balance || 0).toFixed(2)}</span>
+                                </p>
+                            </div>
+                            <button onClick={() => setShowLendModal(false)} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 dark:text-white/40 transition-colors">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Warning */}
+                        <div className="mx-5 mt-4 flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                            <AlertTriangle size={15} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                            <p className="text-amber-400 text-xs leading-relaxed">
+                                Releasing lend will <strong>cancel</strong> the investment and return the principal to the user's available balance. Daily earnings will stop.
+                            </p>
+                        </div>
+
+                        {/* Investment list */}
+                        <div className="p-5 space-y-3 max-h-72 overflow-y-auto">
+                            {(lendUser.investments || []).filter(inv => inv.status === 'active').length === 0 ? (
+                                <p className="text-center text-gray-500 dark:text-white/40 text-sm py-4">No active investments.</p>
+                            ) : (
+                                (lendUser.investments || []).filter(inv => inv.status === 'active').map(inv => (
+                                    <div key={inv._id} className="flex items-center justify-between bg-gray-50 dark:bg-dark-300 rounded-xl p-3 border border-slate-200 dark:border-white/5">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white">{inv.package?.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-white/40">
+                                                <span className="text-amber-400 font-bold">${inv.package?.investmentAmount?.toFixed(2)}</span>
+                                                {' '}· Daily: ${inv.package?.dailyEarning?.toFixed(2)}
+                                                {' '}· Ends: {new Date(inv.endDate).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleReleaseLend(inv._id)}
+                                            disabled={releasingId === inv._id || releasingAll}
+                                            className="ml-3 px-3 py-1.5 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1"
+                                        >
+                                            {releasingId === inv._id ? 'Releasing...' : <><ChevronRight size={13} />Release</>}
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Release All button */}
+                        {(lendUser.investments || []).filter(inv => inv.status === 'active').length > 1 && (
+                            <div className="px-5 pb-5">
+                                <button
+                                    onClick={() => handleReleaseLend(null)}
+                                    disabled={releasingAll}
+                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm hover:from-amber-400 hover:to-orange-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {releasingAll ? 'Releasing All...' : <><Coins size={16} /> Release ALL Lends to Balance</>}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            {/* ====== End Release Lend Modal ====== */}
         </div>
     );
 };

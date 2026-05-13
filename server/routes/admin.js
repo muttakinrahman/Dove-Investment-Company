@@ -557,6 +557,38 @@ router.post('/deposit/:id/reject', authMiddleware, adminMiddleware, async (req, 
     }
 });
 
+// Revoke Approved Deposit (reset to pending for re-review)
+router.post('/deposit/:id/revoke', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const deposit = await Deposit.findById(req.params.id);
+
+        if (!deposit) {
+            return res.status(404).json({ message: 'Deposit not found' });
+        }
+
+        if (deposit.status !== 'approved') {
+            return res.status(400).json({ message: 'Only approved deposits can be revoked.' });
+        }
+
+        deposit.status = 'pending';
+        deposit.approvedAt = null;
+        await deposit.save();
+
+        await AdminLog.create({
+            adminId: req.userId,
+            action: 'deposit_revoked',
+            targetUserId: deposit.userId,
+            description: `Revoked deposit ${deposit.amount} back to pending (${deposit.paymentMethod || 'unknown'})`
+        });
+
+        // Note: Balance is NOT automatically deducted — admin must adjust manually if needed.
+        res.json({ message: 'Deposit revoked back to pending. Note: balance was NOT automatically deducted.' });
+    } catch (error) {
+        console.error('Revoke deposit error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ================= MANUAL DEPOSIT =================
 
 // Admin adds a deposit directly to a user's account
@@ -649,6 +681,79 @@ router.post('/manual-deposit', authMiddleware, adminMiddleware, async (req, res)
     } catch (error) {
         console.error('Manual deposit error:', error);
         res.status(500).json({ message: 'Server error. Please try again.' });
+    }
+});
+
+// ================= ADMIN: RELEASE LEND TO BALANCE =================
+
+// Admin releases a user's active lend (investment) principal back to their available balance
+router.post('/user/:id/release-lend', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { investmentId } = req.body; // optional — if provided, release only that one
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const activeInvestments = user.investments.filter(inv => inv.status === 'active');
+
+        if (activeInvestments.length === 0) {
+            return res.status(400).json({ message: 'This user has no active lend investments to release.' });
+        }
+
+        let released = [];
+        let totalReleased = 0;
+
+        user.investments.forEach(inv => {
+            if (inv.status !== 'active') return;
+            // If investmentId provided, only release that specific one
+            if (investmentId && inv._id.toString() !== investmentId) return;
+
+            inv.status = 'cancelled';
+            user.balance += inv.package.investmentAmount;
+            totalReleased += inv.package.investmentAmount;
+            released.push({
+                id: inv._id,
+                name: inv.package.name,
+                amount: inv.package.investmentAmount
+            });
+        });
+
+        if (released.length === 0) {
+            return res.status(400).json({ message: 'No matching investment found to release.' });
+        }
+
+        await user.save();
+
+        // Notify the user
+        await createNotification({
+            userId: user._id,
+            title: 'Lend Released by Admin',
+            message: `Your lend investment(s) (${released.map(r => r.name).join(', ')}) have been released by Admin. $${totalReleased.toFixed(2)} has been returned to your available balance.`,
+            type: 'investment',
+            amount: totalReleased
+        });
+
+        // Admin log
+        await AdminLog.create({
+            adminId: req.userId,
+            action: 'lend_released_to_balance',
+            targetUserId: user._id,
+            changes: { released, totalReleased, newBalance: user.balance },
+            description: `Admin released lend of $${totalReleased} to balance for user ${user.phone || user.email || user._id}`
+        });
+
+        res.json({
+            message: `Successfully released $${totalReleased.toFixed(2)} from lend to balance.`,
+            released,
+            totalReleased,
+            newBalance: user.balance
+        });
+
+    } catch (error) {
+        console.error('Release lend error:', error);
+        res.status(500).json({ message: 'Server error' });
     }
 });
 

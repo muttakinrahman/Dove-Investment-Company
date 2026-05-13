@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Check, X, Search, Filter } from 'lucide-react';
+import { Check, X, Search, Filter, AlertTriangle, RotateCcw } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminDeposits = () => {
@@ -56,6 +56,20 @@ const AdminDeposits = () => {
         }
     };
 
+    const handleRevoke = async (id) => {
+        if (!window.confirm('Revoke this approval? The deposit will be set back to PENDING for re-review.\n\nThis does NOT deduct the balance from user (do that manually if needed).')) return;
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`/api/admin/deposit/${id}/revoke`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchDeposits();
+            toast.success('Deposit revoked back to pending.');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Revoke failed');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -75,6 +89,14 @@ const AdminDeposits = () => {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* NowPayments mismatch info note */}
+            <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                <AlertTriangle size={15} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                <p className="text-amber-400 text-xs leading-relaxed">
+                    <strong>⚠️ NowPayments Warning:</strong> Deposits marked <span className="font-mono bg-amber-500/20 px-1 rounded">⚠ NP</span> were paid via NowPayments but may have <strong>expired</strong> on their platform. Verify on your NowPayments dashboard before approving.
+                </p>
             </div>
 
             <div className="glass-card overflow-hidden">
@@ -119,12 +141,23 @@ const AdminDeposits = () => {
                                             {new Date(deposit.createdAt).toLocaleDateString()}
                                         </td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${deposit.status === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
-                                                deposit.status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                                                    'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                                }`}>
-                                                {deposit.status}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${deposit.status === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                    deposit.status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                                        'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                                    }`}>
+                                                    {deposit.status}
+                                                </span>
+                                                {/* NowPayments mismatch warning */}
+                                                {deposit.paymentMethod === 'nowpayments' && deposit.status === 'approved' && (
+                                                    <span
+                                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded text-[10px] font-bold cursor-help"
+                                                        title="This was a NowPayments deposit. Verify it wasn't expired on NowPayments dashboard before treating as valid."
+                                                    >
+                                                        <AlertTriangle size={10} /> NP
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-4 text-right">
                                             {deposit.status === 'pending' && (
