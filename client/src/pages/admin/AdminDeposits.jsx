@@ -142,17 +142,20 @@ const AdminDeposits = () => {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${deposit.status === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                                                    deposit.status === 'approved' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
                                                     deposit.status === 'rejected' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                                                        'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                                    }`}>
+                                                    deposit.status === 'expired'  ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                                                    deposit.status === 'confirming' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                    'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                                }`}>
                                                     {deposit.status}
                                                 </span>
-                                                {/* NowPayments mismatch warning */}
-                                                {deposit.paymentMethod === 'nowpayments' && deposit.status === 'approved' && (
+                                                {/* ⚠ NP badge — shown on ALL NowPayments (auto) deposits for awareness */}
+                                                {deposit.paymentMethod === 'auto' && (
                                                     <span
-                                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-500/20 border border-orange-500/30 text-orange-400 rounded text-[10px] font-bold cursor-help"
-                                                        title="This was a NowPayments deposit. Verify it wasn't expired on NowPayments dashboard before treating as valid."
+                                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded text-[10px] font-bold cursor-help"
+                                                        title="NowPayments auto-payment. If status is 'confirmed/finished' it was auto-approved. If 'expired', no money was received."
                                                     >
                                                         <AlertTriangle size={10} /> NP
                                                     </span>
