@@ -364,6 +364,57 @@ router.get('/history', authMiddleware, async (req, res) => {
     }
 });
 
+// User: Cancel a pending withdrawal (refund balance)
+router.post('/cancel/:id', authMiddleware, async (req, res) => {
+    try {
+        const withdrawal = await Withdrawal.findOne({
+            _id: req.params.id,
+            userId: req.userId,
+            status: 'pending'
+        });
+
+        if (!withdrawal) {
+            return res.status(404).json({ message: 'Pending withdrawal not found or already processed.' });
+        }
+
+        // Refund the full deducted amount (amount + fee)
+        const refundAmount = withdrawal.totalAmount || (withdrawal.amount + (withdrawal.fee || 0));
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.balance += refundAmount;
+        await user.save();
+
+        // Mark withdrawal as cancelled
+        withdrawal.status = 'rejected';
+        withdrawal.rejectionReason = 'Cancelled by user';
+        withdrawal.processedAt = new Date();
+        await withdrawal.save();
+
+        // Notification
+        await createNotification({
+            userId: req.userId,
+            title: 'Withdrawal Cancelled',
+            message: `Your withdrawal request of $${withdrawal.amount} has been cancelled. $${refundAmount.toFixed(2)} has been refunded to your wallet.`,
+            type: 'withdrawal',
+            amount: refundAmount,
+            relatedId: withdrawal._id
+        });
+
+        res.json({
+            message: 'Withdrawal cancelled successfully. Balance refunded.',
+            refundedAmount: refundAmount,
+            newBalance: user.balance
+        });
+    } catch (error) {
+        console.error('Cancel withdrawal error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // Get single withdrawal details
 router.get('/:id', authMiddleware, async (req, res) => {
     try {

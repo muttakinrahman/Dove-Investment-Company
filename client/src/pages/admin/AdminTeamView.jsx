@@ -167,7 +167,7 @@ const AdminTeamView = () => {
             {!teamLoading && teamData && teamData.teamBusinessEnabled && (
                 <div className="space-y-5">
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {/* Total Members */}
                         <div className="bg-white dark:bg-dark-200 rounded-2xl p-5 border border-slate-200 dark:border-amber-500/20 shadow-sm">
                             <div className="flex items-center gap-2 mb-3">

@@ -457,6 +457,30 @@ const Withdraw = () => {
                                             Rejection Reason: {item.rejectionReason}
                                         </p>
                                     )}
+                                    {/* Cancel Button for Pending */}
+                                    {item.status === 'pending' && (
+                                        <button
+                                            onClick={async () => {
+                                                if (!window.confirm(`Cancel this $${item.amount} withdrawal? The full amount will be refunded to your wallet.`)) return;
+                                                try {
+                                                    const token = localStorage.getItem('token');
+                                                    const res = await axios.post(`/api/withdrawal/cancel/${item._id}`, {}, {
+                                                        headers: { Authorization: `Bearer ${token}` }
+                                                    });
+                                                    toast.success(`Withdrawal cancelled! $${res.data.refundedAmount?.toFixed(2)} refunded.`);
+                                                    fetchWithdrawals();
+                                                    fetchEligibility();
+                                                    // Refresh user context
+                                                    window.location.reload();
+                                                } catch (err) {
+                                                    toast.error(err.response?.data?.message || 'Failed to cancel withdrawal');
+                                                }
+                                            }}
+                                            className="w-full py-2.5 rounded-xl border-2 border-red-400/30 text-red-500 font-bold text-xs uppercase tracking-widest hover:bg-red-500/10 transition-all active:scale-[0.97]"
+                                        >
+                                            ✕ Cancel Withdrawal
+                                        </button>
+                                    )}
                                 </div>
                             ))
                         ) : (
