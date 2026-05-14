@@ -73,9 +73,20 @@ router.get('/user-history', authMiddleware, async (req, res) => {
 
 router.get('/team-list', authMiddleware, async (req, res) => {
     try {
-        const user = await User.findById(req.userId);
+        let user = await User.findById(req.userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        // ── Admin override: view any user's team business ──
+        if (req.query.asUserId && user.role === 'admin') {
+            const targetUser = await User.findById(req.query.asUserId);
+            if (!targetUser) {
+                return res.status(404).json({ message: 'Target user not found' });
+            }
+            // For admin viewing, always enable teamBusiness view
+            targetUser.canViewTeamBusiness = true;
+            user = targetUser;
         }
 
         // Helper: check if user has an approved deposit

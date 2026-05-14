@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Wallet, LogOut, ShieldCheck, Package, DollarSign, Settings, BarChart3, Menu, X, MessageSquare, PlusCircle, GitFork } from 'lucide-react';
+import { LayoutDashboard, Users, Wallet, LogOut, ShieldCheck, Package, DollarSign, Settings, BarChart3, Menu, X, MessageSquare, PlusCircle, GitFork, Briefcase } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const AdminLayout = () => {
@@ -16,6 +16,7 @@ const AdminLayout = () => {
         { icon: DollarSign, label: 'Withdrawals', path: '/admin/withdrawals' },
         { icon: Users, label: 'Users', path: '/admin/users' },
         { icon: GitFork, label: 'Referral Tree', path: '/admin/referral-tree' },
+        { icon: Briefcase, label: 'Team Business View', path: '/admin/team-view' },
         { icon: Package, label: 'Packages', path: '/admin/packages' },
         { icon: BarChart3, label: 'Reports', path: '/admin/reports' },
         { icon: MessageSquare, label: 'Support Chat', path: '/admin/support' },

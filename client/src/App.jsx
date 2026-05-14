@@ -22,6 +22,7 @@ import AdminReports from './pages/admin/AdminReports';
 import AdminSupport from './pages/admin/AdminSupport';
 import AdminManualDeposit from './pages/admin/AdminManualDeposit';
 import AdminReferralTree from './pages/admin/AdminReferralTree';
+import AdminTeamView from './pages/admin/AdminTeamView';
 import WalletPage from './pages/Wallet';
 import Notifications from './pages/Notifications';
 import Help from './pages/Help';
@@ -168,6 +169,7 @@ function App() {
                     <Route path="support" element={<AdminSupport />} />
                     <Route path="manual-deposit" element={<AdminManualDeposit />} />
                     <Route path="referral-tree" element={<AdminReferralTree />} />
+                    <Route path="team-view" element={<AdminTeamView />} />
                 </Route>
 
                 {/* Maintenance Mode Handling */}
