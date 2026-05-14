@@ -182,7 +182,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         if (user.canViewTeamBusiness) {
             teamBusinessEnabled = true;
 
-            // Collect all team member IDs: the user themselves + Gen 1 + 2 + 3
+            // Collect all IDs: the logged-in user themselves + Gen 1 + 2 + 3
             const allMemberIds = [
                 user._id,                              // ✅ include the user themselves
                 ...gen1Users.map(u => u._id),
@@ -190,19 +190,14 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                 ...gen3Users.map(u => u._id)
             ];
 
-            // Sum all approved deposits from team members (grand total, excluding user themselves)
-            const teamOnlyIds = [
-                ...gen1Users.map(u => u._id),
-                ...gen2Users.map(u => u._id),
-                ...gen3Users.map(u => u._id)
-            ];
+            // Sum all approved deposits: user + entire team (Gen 1+2+3) — consistent with withdrawal
             const depositAgg = await Deposit.aggregate([
-                { $match: { userId: { $in: teamOnlyIds }, status: 'approved' } },
+                { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
             ]);
             teamTotalDeposit = depositAgg[0]?.total || 0;
 
-            // Sum all approved withdrawals: user themselves + entire team (Gen 1+2+3)
+            // Sum all approved withdrawals: user + entire team (Gen 1+2+3)
             const withdrawAgg = await Withdrawal.aggregate([
                 { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
