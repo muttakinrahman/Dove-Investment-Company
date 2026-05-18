@@ -46,6 +46,12 @@ export async function getUplineUsers(invitationCode, levels = 3) {
  * @returns {Array} Array of commission records
  */
 export async function distributeCommissions(investor, investmentAmount) {
+    // ⛔ AUTOMATIC REFERRAL BONUS IS DISABLED — Admin gives bonuses manually
+    // To re-enable, remove this early return
+    console.log(`[Commission] Auto referral bonus DISABLED — skipping for investor ${investor._id}`);
+    return [];
+
+    /* ── DISABLED CODE BELOW ── */
     const commissions = [];
 
     // Only get Gen 1 (direct referrer) — level 1 only
