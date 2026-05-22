@@ -262,7 +262,7 @@ const Home = () => {
                         <div className="grid grid-cols-3 gap-3">
                             {/* Telegram Channel */}
                             <a
-                                href="https://t.me/DoveInvestmentGoldMineOfficial"
+                                href="https://t.me/doveinvestmentgoldmine"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center gap-2 group"
@@ -277,7 +277,7 @@ const Home = () => {
 
                             {/* Facebook */}
                             <a
-                                href="#"
+                                href="http://facebook.com/DoveGoldOfficial"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center gap-2 group"
