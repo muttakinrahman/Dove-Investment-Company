@@ -259,7 +259,7 @@ const Home = () => {
                 <div className="px-4 pb-4">
                     <div className="glass-card p-6">
                         <h3 className="text-gray-900 dark:text-white font-semibold mb-6 text-center">Join Our Community</h3>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-5 gap-2">
                             {/* Telegram Channel */}
                             <a
                                 href="https://t.me/doveinvestmentgoldmine"
@@ -292,7 +292,7 @@ const Home = () => {
 
                             {/* Twitter / X */}
                             <a
-                                href="#"
+                                href="https://x.com/DoveGold52"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex flex-col items-center gap-2 group"
@@ -303,6 +303,36 @@ const Home = () => {
                                     </svg>
                                 </div>
                                 <span className="text-[10px] text-gray-900/60 dark:text-white/60 text-center leading-tight">Twitter</span>
+                            </a>
+
+                            {/* Instagram */}
+                            <a
+                                href="https://www.instagram.com/dovegoldofficial?utm_source=qr&igsh=MWRhZGVwZHYzY21oNw=="
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-col items-center gap-2 group"
+                            >
+                                <div className="w-14 h-14 bg-[#E1306C]/10 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-[#E1306C]/20 shadow-glow">
+                                    <svg className="w-7 h-7 text-[#E1306C]" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] text-gray-900/60 dark:text-white/60 text-center leading-tight">Instagram</span>
+                            </a>
+
+                            {/* TikTok */}
+                            <a
+                                href="http://tiktok.com/@dovegoldofficial"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-col items-center gap-2 group"
+                            >
+                                <div className="w-14 h-14 bg-gray-900/8 dark:bg-white/8 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 group-hover:bg-gray-900/15 dark:group-hover:bg-white/15 shadow-glow">
+                                    <svg className="w-7 h-7 text-gray-900 dark:text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .8.11V9.4a6.27 6.27 0 0 0-3.11.3 6.3 6.3 0 0 0-3.9 6.07 6.3 6.3 0 0 0 10.98 4.13 6.3 6.3 0 0 0 1.9-4.43V8.4a8.1 8.1 0 0 0 4.76 1.67V6.69z" />
+                                    </svg>
+                                </div>
+                                <span className="text-[10px] text-gray-900/60 dark:text-white/60 text-center leading-tight">TikTok</span>
                             </a>
                         </div>
                     </div>
