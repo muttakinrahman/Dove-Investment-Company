@@ -726,4 +726,58 @@ router.post('/send-otp', authMiddleware, async (req, res) => {
     }
 });
 
+// Admin: Edit pending withdrawal details
+router.put('/admin/:id/update-details', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { bankName, accountNumber, accountName } = req.body;
+        const withdrawalId = req.params.id;
+        const adminId = req.userId;
+
+        const withdrawal = await Withdrawal.findById(withdrawalId);
+        if (!withdrawal) {
+            return res.status(404).json({ message: 'Withdrawal not found' });
+        }
+
+        if (withdrawal.status !== 'pending') {
+            return res.status(400).json({ message: 'Only pending withdrawals can be updated' });
+        }
+
+        // Keep track of changes for logging
+        const oldDetails = { ...withdrawal.bankDetails.toObject() };
+
+        if (bankName !== undefined) withdrawal.bankDetails.bankName = bankName;
+        if (accountNumber !== undefined) withdrawal.bankDetails.accountNumber = accountNumber;
+        if (accountName !== undefined) withdrawal.bankDetails.accountName = accountName;
+
+        await withdrawal.save();
+
+        const user = await User.findById(withdrawal.userId);
+
+        // Log admin action
+        const log = new AdminLog({
+            adminId,
+            action: 'withdrawal_updated',
+            targetUserId: withdrawal.userId,
+            targetResource: {
+                resourceType: 'withdrawal',
+                resourceId: withdrawal._id
+            },
+            changes: {
+                old: oldDetails,
+                new: withdrawal.bankDetails.toObject()
+            },
+            description: `Updated withdrawal bank/wallet details for user ${user?.phone || 'Unknown'}`
+        });
+        await log.save();
+
+        res.json({
+            message: 'Withdrawal details updated successfully',
+            withdrawal
+        });
+    } catch (error) {
+        console.error('Update withdrawal details error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 export default router;

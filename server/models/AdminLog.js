@@ -19,6 +19,7 @@ const adminLogSchema = new mongoose.Schema({
             'deposit_rejected',
             'withdrawal_approved',
             'withdrawal_rejected',
+            'withdrawal_updated',
             'package_created',
             'package_updated',
             'package_deleted',

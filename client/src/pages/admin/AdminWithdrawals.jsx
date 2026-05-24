@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Download, CheckCircle, XCircle, Clock, Search, Hash, X, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Download, CheckCircle, XCircle, Clock, Search, Hash, X, AlertTriangle, ShieldAlert, Edit } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminWithdrawals = () => {
@@ -44,6 +44,15 @@ const AdminWithdrawals = () => {
         reason: '',
         blockMessage: '',
         isBlocking: false
+    });
+
+    // New Edit Modal State
+    const [editModal, setEditModal] = useState({
+        isOpen: false,
+        withdrawalId: null,
+        bankName: '',
+        accountNumber: '',
+        accountName: ''
     });
 
     useEffect(() => {
@@ -104,6 +113,65 @@ const AdminWithdrawals = () => {
             blockMessage: '',
             isBlocking: false
         });
+    };
+
+    const openEditModal = (item) => {
+        setEditModal({
+            isOpen: true,
+            withdrawalId: item._id,
+            bankName: item.bankDetails?.bankName || '',
+            accountNumber: item.bankDetails?.accountNumber || '',
+            accountName: item.bankDetails?.accountName || ''
+        });
+    };
+
+    const closeEditModal = () => {
+        setEditModal({
+            isOpen: false,
+            withdrawalId: null,
+            bankName: '',
+            accountNumber: '',
+            accountName: ''
+        });
+    };
+
+    const handleSaveEdit = async () => {
+        const { withdrawalId, bankName, accountNumber, accountName } = editModal;
+
+        if (!bankName || bankName.trim().length === 0) {
+            toast.error('Bank/Wallet name is required');
+            return;
+        }
+        if (!accountNumber || accountNumber.trim().length === 0) {
+            toast.error('Account number/Wallet address is required');
+            return;
+        }
+        if (!accountName || accountName.trim().length === 0) {
+            toast.error('Account holder name is required');
+            return;
+        }
+
+        setProcessingId(withdrawalId);
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`/api/withdrawal/admin/${withdrawalId}/update-details`,
+                {
+                    bankName: bankName.trim(),
+                    accountNumber: accountNumber.trim(),
+                    accountName: accountName.trim()
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            fetchWithdrawals();
+            toast.success('Withdrawal details updated successfully');
+            closeEditModal();
+        } catch (error) {
+            console.error('Error updating withdrawal details:', error);
+            toast.error(error.response?.data?.message || 'Failed to update details');
+        } finally {
+            setProcessingId(null);
+        }
     };
 
     const handleApprove = async () => {
@@ -228,8 +296,19 @@ const AdminWithdrawals = () => {
                                         <span className="bg-primary/10 text-primary px-2 py-1 rounded">Active Members: {item.activeReferrals || 0}</span>
                                     </div>
                                 </div>
-                                <div className="mt-3 p-3 bg-gray-50 dark:bg-dark-300 rounded border border-slate-200 dark:border-white/5 text-xs font-mono text-gray-900/70 dark:text-white/70 break-all">
-                                    {item.bankDetails.bankName} - {item.bankDetails.accountNumber} ({item.bankDetails.accountName})
+                                <div className="mt-3 flex gap-2 items-start">
+                                    <div className="flex-1 p-3 bg-gray-50 dark:bg-dark-300 rounded border border-slate-200 dark:border-white/5 text-xs font-mono text-gray-900/70 dark:text-white/70 break-all">
+                                        <span className="font-bold text-gray-900 dark:text-white uppercase">{item.bankDetails.bankName}</span> - {item.bankDetails.accountNumber} <span className="text-gray-900/40 dark:text-white/40">({item.bankDetails.accountName})</span>
+                                    </div>
+                                    {item.status === 'pending' && (
+                                        <button
+                                            onClick={() => openEditModal(item)}
+                                            className="p-3 bg-gray-50 hover:bg-gray-100 dark:bg-dark-300 dark:hover:bg-dark-200 text-gray-900/60 dark:text-white/60 hover:text-blue-500 rounded border border-slate-200 dark:border-white/5 transition-colors"
+                                            title="Edit Wallet/Bank Details"
+                                        >
+                                            <Edit size={14} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -396,6 +475,85 @@ const AdminWithdrawals = () => {
                                 className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white rounded-lg transition-colors disabled:opacity-50 font-bold"
                             >
                                 {processingId === rejectModal.withdrawalId ? 'Processing...' : 'Reject & Refund'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Details Modal */}
+            {editModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="glass-card w-full max-w-md p-6 relative bg-white dark:bg-dark-200 border border-blue-500/20">
+                        <button
+                            onClick={closeEditModal}
+                            className="absolute top-4 right-4 p-1 text-gray-900/40 dark:text-white/40 hover:text-white transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 text-blue-500">
+                            <Edit size={20} />
+                            Edit Withdrawal Details
+                        </h3>
+
+                        <div className="mb-6 space-y-4">
+                            {/* Bank Name */}
+                            <div>
+                                <label className="block text-sm text-gray-900/80 dark:text-white/80 mb-2">
+                                    Method / Bank / Network Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editModal.bankName}
+                                    onChange={(e) => setEditModal({ ...editModal, bankName: e.target.value })}
+                                    placeholder="e.g. bsc, trc20, bkash"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                                />
+                            </div>
+
+                            {/* Account Number / Wallet Address */}
+                            <div>
+                                <label className="block text-sm text-gray-900/80 dark:text-white/80 mb-2">
+                                    Wallet Address / Account Number *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editModal.accountNumber}
+                                    onChange={(e) => setEditModal({ ...editModal, accountNumber: e.target.value })}
+                                    placeholder="Enter address or account number"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white font-mono focus:outline-none focus:border-blue-500"
+                                />
+                            </div>
+
+                            {/* Account Name */}
+                            <div>
+                                <label className="block text-sm text-gray-900/80 dark:text-white/80 mb-2">
+                                    User / Account Holder Name *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={editModal.accountName}
+                                    onChange={(e) => setEditModal({ ...editModal, accountName: e.target.value })}
+                                    placeholder="Enter user name or phone"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={closeEditModal}
+                                className="flex-1 px-4 py-3 bg-gray-50 dark:bg-dark-300 hover:bg-dark-200 text-gray-900 dark:text-white rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={processingId === editModal.withdrawalId}
+                                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-gray-900 dark:text-white rounded-lg transition-colors disabled:opacity-50 font-bold"
+                            >
+                                {processingId === editModal.withdrawalId ? 'Saving...' : 'Save Changes'}
                             </button>
                         </div>
                     </div>
