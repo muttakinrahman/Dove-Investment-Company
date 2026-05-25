@@ -248,60 +248,75 @@ const AdminUsers = () => {
                                             {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-wrap gap-2 max-w-sm">
                                                 <button
                                                     onClick={() => handleEdit(user)}
-                                                    className="p-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-colors"
+                                                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500 hover:text-white transition-all text-xs font-bold"
                                                     title="Edit User"
                                                 >
-                                                    <Edit2 size={16} />
+                                                    <Edit2 size={13} />
+                                                    <span>Edit</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleLoginAsUser(user)}
-                                                    className="p-2 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500 hover:text-white transition-colors"
+                                                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500 hover:text-white transition-all text-xs font-bold"
                                                     title="Login as this user"
                                                 >
-                                                    <LogIn size={16} />
+                                                    <LogIn size={13} />
+                                                    <span>Login</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleBlock(user)}
-                                                    className={`p-2 rounded-lg transition-colors ${
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-bold ${
                                                         user.isBlocked
                                                             ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white'
                                                             : 'bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white'
                                                     }`}
                                                     title={user.isBlocked ? 'Unblock User' : 'Block User'}
                                                 >
-                                                    {user.isBlocked ? <ShieldCheck size={16} /> : <ShieldBan size={16} />}
+                                                    {user.isBlocked ? (
+                                                        <>
+                                                            <ShieldCheck size={13} />
+                                                            <span>Unblock</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <ShieldBan size={13} />
+                                                            <span>Block</span>
+                                                        </>
+                                                    )}
                                                 </button>
                                                 {user.twoFactorEnabled && (
                                                     <button
                                                         onClick={() => handleDisable2FA(user)}
-                                                        className="p-2 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500 hover:text-white transition-colors"
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500 hover:text-white transition-all text-xs font-bold"
                                                         title="Disable Google Authenticator (2FA)"
                                                     >
-                                                        <KeyRound size={16} />
+                                                        <KeyRound size={13} />
+                                                        <span>2FA</span>
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleToggleTeamBusiness(user)}
-                                                    className={`p-2 rounded-lg transition-colors ${
+                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-bold ${
                                                         user.canViewTeamBusiness
                                                             ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-white'
                                                             : 'bg-slate-500/30 text-slate-400 hover:bg-yellow-500/20 hover:text-yellow-400'
                                                     }`}
-                                                    title={user.canViewTeamBusiness ? 'Team Business View: ON — Click to Disable' : 'Team Business View: OFF — Click to Enable'}
+                                                    title={user.canViewTeamBusiness ? 'Disable Team Business View' : 'Enable Team Business View'}
                                                 >
-                                                    <Briefcase size={16} />
+                                                    <Briefcase size={13} />
+                                                    <span>{user.canViewTeamBusiness ? 'Biz: ON' : 'Biz: OFF'}</span>
                                                 </button>
                                                 {/* Release Lend button — only if has active investments */}
                                                 {(user.investments || []).some(inv => inv.status === 'active') && (
                                                     <button
                                                         onClick={() => handleOpenLendModal(user)}
-                                                        className="p-2 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-colors"
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500 hover:text-white transition-all text-xs font-bold"
                                                         title="Release Lend to Balance"
                                                     >
-                                                        <Coins size={16} />
+                                                        <Coins size={13} />
+                                                        <span>Lend</span>
                                                     </button>
                                                 )}
                                             </div>
