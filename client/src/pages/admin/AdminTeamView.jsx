@@ -177,7 +177,7 @@ const AdminTeamView = () => {
                                 <p className="text-gray-500 dark:text-white/40 text-[10px] font-black uppercase tracking-widest">Total Members</p>
                             </div>
                             <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">{teamData.total}</h3>
-                            <p className="text-gray-400 dark:text-white/30 text-[9px] font-bold mt-1.5 uppercase">Gen 1 + 2 + 3</p>
+                            <p className="text-gray-400 dark:text-white/30 text-[9px] font-bold mt-1.5 uppercase">All Downline</p>
                         </div>
 
                         {/* Team Deposit */}

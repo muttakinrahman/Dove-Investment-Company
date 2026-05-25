@@ -200,9 +200,9 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         }));
 
         const allMembers = [...gen1, ...gen2, ...gen3];
-        const total = allMembers.length;
+        let total = allMembers.length;
         // Active count: only members with deposit AND total balance >= $50
-        const activeCount = allMembers.filter(m => m.isActiveMember).length;
+        let activeCount = allMembers.filter(m => m.isActiveMember).length;
 
         // ==========================================
         // 💼 TEAM BUSINESS VIEW — only for privileged users
@@ -217,6 +217,25 @@ router.get('/team-list', authMiddleware, async (req, res) => {
 
             // Fetch ALL downline users recursively (unlimited depth)
             const userDownline = await getAllDownline(user.invitationCode);
+
+            // Overwrite total and activeCount with recursive downline metrics
+            total = userDownline.ids.length;
+
+            // Fast optimized active count calculation over all downline members
+            const depositedUserIds = await Deposit.distinct('userId', {
+                userId: { $in: userDownline.ids },
+                status: 'approved'
+            });
+            const depositedSet = new Set(depositedUserIds.map(id => id.toString()));
+
+            let activeCountTemp = 0;
+            for (const u of userDownline.users) {
+                const hasDeposited = depositedSet.has(u._id.toString());
+                const totalBalance = computeTotalBalance(u);
+                const isActive = hasDeposited && totalBalance >= 50;
+                if (isActive) activeCountTemp++;
+            }
+            activeCount = activeCountTemp;
 
             // Collect all IDs: the logged-in user themselves + all recursive downline members
             const allMemberIds = [
