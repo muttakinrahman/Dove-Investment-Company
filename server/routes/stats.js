@@ -134,7 +134,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen1 = await Promise.all(gen1Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited && totalBalance >= 50;
+            const isActiveMember = hasDeposited;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -159,7 +159,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen2 = await Promise.all(gen2Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited && totalBalance >= 50;
+            const isActiveMember = hasDeposited;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -184,7 +184,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen3 = await Promise.all(gen3Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited && totalBalance >= 50;
+            const isActiveMember = hasDeposited;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -231,9 +231,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             let activeCountTemp = 0;
             for (const u of userDownline.users) {
                 const hasDeposited = depositedSet.has(u._id.toString());
-                const totalBalance = computeTotalBalance(u);
-                const isActive = hasDeposited && totalBalance >= 50;
-                if (isActive) activeCountTemp++;
+                if (hasDeposited) activeCountTemp++;
             }
             activeCount = activeCountTemp;
 
