@@ -71,6 +71,28 @@ router.get('/user-history', authMiddleware, async (req, res) => {
     }
 });
 
+// Helper to recursively get all downline users (unlimited depth)
+async function getAllDownline(invitationCode) {
+    let currentCodes = [invitationCode];
+    let allIds = [];
+    let allCodes = [];
+    let allUsers = [];
+    
+    while (currentCodes.length > 0) {
+        const nextUsers = await User.find(
+            { referredBy: { $in: currentCodes } },
+            '_id invitationCode fullName email phone'
+        );
+        if (nextUsers.length === 0) break;
+        
+        currentCodes = nextUsers.map(u => u.invitationCode);
+        allIds.push(...nextUsers.map(u => u._id));
+        allCodes.push(...currentCodes);
+        allUsers.push(...nextUsers);
+    }
+    return { ids: allIds, codes: allCodes, users: allUsers };
+}
+
 router.get('/team-list', authMiddleware, async (req, res) => {
     try {
         let user = await User.findById(req.userId);
@@ -193,22 +215,23 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         if (user.canViewTeamBusiness) {
             teamBusinessEnabled = true;
 
-            // Collect all IDs: the logged-in user themselves + Gen 1 + 2 + 3
+            // Fetch ALL downline users recursively (unlimited depth)
+            const userDownline = await getAllDownline(user.invitationCode);
+
+            // Collect all IDs: the logged-in user themselves + all recursive downline members
             const allMemberIds = [
                 user._id,                              // ✅ include the user themselves
-                ...gen1Users.map(u => u._id),
-                ...gen2Users.map(u => u._id),
-                ...gen3Users.map(u => u._id)
+                ...userDownline.ids
             ];
 
-            // Sum all approved deposits: user + entire team (Gen 1+2+3) — consistent with withdrawal
+            // Sum all approved deposits: user + entire team (unlimited depth)
             const depositAgg = await Deposit.aggregate([
                 { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
             ]);
             teamTotalDeposit = depositAgg[0]?.total || 0;
 
-            // Sum all approved withdrawals: user + entire team (Gen 1+2+3)
+            // Sum all approved withdrawals: user + entire team (unlimited depth)
             const withdrawAgg = await Withdrawal.aggregate([
                 { $match: { userId: { $in: allMemberIds }, status: 'approved' } },
                 { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -217,26 +240,15 @@ router.get('/team-list', authMiddleware, async (req, res) => {
 
             // ── Per-partner breakdown ──
             // For each Gen1 partner, calculate deposit of:
-            //   partner themselves + all their Gen2 + all their Gen3
-            // Also calculate withdrawal for Gen1 partner + their sub-team
+            //   partner themselves + all their recursive downline
+            // Also calculate withdrawal for Gen1 partner + their recursive sub-team
             partnerBreakdown = await Promise.all(gen1Users.map(async (partner) => {
-                // Find Gen2 under this partner
-                const partnerGen2 = await User.find(
-                    { referredBy: partner.invitationCode },
-                    '_id invitationCode fullName email phone'
-                );
-                const partnerGen2Codes = partnerGen2.map(u => u.invitationCode);
-
-                // Find Gen3 under this partner's Gen2
-                const partnerGen3 = await User.find(
-                    { referredBy: { $in: partnerGen2Codes } },
-                    '_id'
-                );
+                // Get all recursive downline members under this partner
+                const partnerDownline = await getAllDownline(partner.invitationCode);
 
                 const partnerSubIds = [
                     partner._id,
-                    ...partnerGen2.map(u => u._id),
-                    ...partnerGen3.map(u => u._id)
+                    ...partnerDownline.ids
                 ];
 
                 // Total deposits for this partner's sub-tree
@@ -245,8 +257,8 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                     { $group: { _id: null, total: { $sum: '$amount' } } }
                 ]);
 
-                // ── Withdrawal data: Gen1 partner + their direct sub-members ──
-                // Total withdraw for partner themselves + Gen2 + Gen3
+                // ── Withdrawal data: Gen1 partner + their recursive sub-members ──
+                // Total withdraw for partner themselves + recursive downline
                 const partnerWithdrawAgg = await Withdrawal.aggregate([
                     { $match: { userId: { $in: partnerSubIds }, status: 'approved' } },
                     { $group: { _id: '$userId', total: { $sum: '$amount' } } }
@@ -261,16 +273,16 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                 // Gen1 partner's own withdrawal
                 const partnerOwnWithdraw = withdrawByUser[partner._id.toString()] || 0;
 
-                // Gen2 members withdraw details (direct sub-members of this Gen1 partner)
-                const gen2WithdrawDetails = partnerGen2.map(g2 => ({
-                    _id: g2._id,
-                    fullName: g2.fullName,
-                    email: g2.email,
-                    phone: g2.phone,
-                    withdraw: withdrawByUser[g2._id.toString()] || 0
+                // Sub-members withdraw details (all recursive downline members of this partner)
+                const gen2WithdrawDetails = partnerDownline.users.map(u => ({
+                    _id: u._id,
+                    fullName: u.fullName,
+                    email: u.email,
+                    phone: u.phone,
+                    withdraw: withdrawByUser[u._id.toString()] || 0
                 })).filter(m => m.withdraw > 0);
 
-                // Total withdraw for entire sub-tree (partner + gen2 + gen3)
+                // Total withdraw for entire sub-tree (partner + recursive downline)
                 const teamWithdraw = partnerWithdrawAgg.reduce((sum, w) => sum + w.total, 0);
 
                 return {
@@ -281,7 +293,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
                     teamDeposit: partnerDepAgg[0]?.total || 0,
                     teamWithdraw,                        // total withdraw of entire sub-tree
                     partnerOwnWithdraw,                  // this Gen1 partner's own withdraw
-                    gen2WithdrawDetails,                 // Gen2 member-wise withdraw
+                    gen2WithdrawDetails,                 // recursive downline member-wise withdraw
                     subTeamSize: partnerSubIds.length - 1  // exclude partner themselves
                 };
             }));
