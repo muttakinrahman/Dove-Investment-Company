@@ -189,13 +189,17 @@ router.post('/request', authMiddleware, async (req, res) => {
                     });
                 }
 
-                // Must keep $50 reserve in account
+                // Must keep $50 reserve in account (balance + active lend combined)
                 const MINIMUM_RESERVE = 50;
+                const activeLendBalance = user.investments
+                    .filter(inv => inv.status === 'active')
+                    .reduce((sum, inv) => sum + inv.package.investmentAmount, 0);
                 const balanceAfterWithdrawal = user.balance - totalAmount;
-                if (balanceAfterWithdrawal < MINIMUM_RESERVE) {
-                    const maxWithdrawable = Math.floor((user.balance - MINIMUM_RESERVE) / (1 + (paymentMethod === 'trc20' ? 0.10 : 0.05)));
+                const totalReserveAfter = balanceAfterWithdrawal + activeLendBalance;
+                if (totalReserveAfter < MINIMUM_RESERVE) {
+                    const maxWithdrawable = Math.floor((user.balance + activeLendBalance - MINIMUM_RESERVE) / (1 + (paymentMethod === 'trc20' ? 0.10 : 0.05)));
                     return res.status(400).json({
-                        message: `You must keep $${MINIMUM_RESERVE} in your account. Maximum you can withdraw: $${maxWithdrawable > 0 ? maxWithdrawable : 0}.`,
+                        message: `You must keep $${MINIMUM_RESERVE} in your account (available balance + lend balance combined). Maximum you can withdraw: $${maxWithdrawable > 0 ? maxWithdrawable : 0}.`,
                         code: 'INSUFFICIENT_RESERVE',
                         minimumReserve: MINIMUM_RESERVE,
                         maxWithdrawable: maxWithdrawable > 0 ? maxWithdrawable : 0
@@ -308,11 +312,15 @@ router.get('/eligibility', authMiddleware, async (req, res) => {
                 );
             } else {
                 // Phase 2: Strict rules — must have 3 referrals & keep $50
+                // $50 reserve = user.balance + active lend balance combined
+                const activeLendBalance = user.investments
+                    .filter(inv => inv.status === 'active')
+                    .reduce((sum, inv) => sum + inv.package.investmentAmount, 0);
                 if (!hasEnoughReferrals) {
                     maxWithdrawable = 0; // blocked until they get 3 referrals
                 } else {
                     maxWithdrawable = Math.min(
-                        Math.floor((user.balance - MINIMUM_RESERVE) / 1.05),
+                        Math.floor((user.balance + activeLendBalance - MINIMUM_RESERVE) / 1.05),
                         Math.floor(remainingWithdrawLimit)
                     );
                     if (maxWithdrawable < 0) maxWithdrawable = 0;
