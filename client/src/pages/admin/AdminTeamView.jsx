@@ -91,7 +91,7 @@ const AdminTeamView = () => {
                         type="text"
                         value={query}
                         onChange={(e) => handleSearch(e.target.value)}
-                        placeholder="Search member by name, phone or email..."
+                        placeholder="Search member by ID#, name, phone or email..."
                         className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-2xl py-3.5 pl-12 pr-12 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 shadow-sm transition-all"
                     />
                     {searchLoading && (
@@ -121,7 +121,7 @@ const AdminTeamView = () => {
                                 </div>
                                 <div>
                                     <p className="font-bold text-sm text-gray-900 dark:text-white">{u.fullName || '—'}</p>
-                                    <p className="text-xs text-primary font-semibold">{u.phone || u.email}</p>
+                                    <p className="text-xs text-primary font-semibold">{u.phone || u.email}{u.memberId ? ` · ID #${u.memberId}` : ''}</p>
                                 </div>
                             </button>
                         ))}

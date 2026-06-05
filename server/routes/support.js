@@ -76,7 +76,8 @@ router.get('/admin/conversations', authMiddleware, async (req, res) => {
                     'userInfo._id': 1,
                     'userInfo.fullName': 1,
                     'userInfo.phone': 1,
-                    'userInfo.profileImage': 1
+                    'userInfo.profileImage': 1,
+                    'userInfo.memberId': 1
                 }
             },
             { $sort: { lastMessageAt: -1 } }
@@ -154,17 +155,24 @@ router.get('/admin/search-users', authMiddleware, async (req, res) => {
             return res.status(403).json({ message: 'Access denied' });
         }
         const { q } = req.query;
-        if (!q || q.trim().length < 2) {
-            return res.status(400).json({ message: 'Query must be at least 2 characters' });
+        if (!q || q.trim().length < 1) {
+            return res.status(400).json({ message: 'Query must be at least 1 character' });
         }
-        const regex = new RegExp(q.trim(), 'i');
-        const users = await User.find({
-            $or: [
-                { fullName: regex },
-                { phone: regex },
-                { email: regex }
-            ]
-        }, '_id fullName phone email profileImage').limit(10);
+        const searchOrConditions = [
+            { fullName: new RegExp(q.trim(), 'i') },
+            { phone: new RegExp(q.trim(), 'i') },
+            { email: new RegExp(q.trim(), 'i') },
+            { invitationCode: new RegExp(q.trim(), 'i') }
+        ];
+        // memberId is a Number — match exactly if query is numeric
+        const memberIdNum = parseInt(q.trim(), 10);
+        if (!isNaN(memberIdNum)) {
+            searchOrConditions.push({ memberId: memberIdNum });
+        }
+        const users = await User.find(
+            { $or: searchOrConditions },
+            '_id fullName phone email profileImage memberId invitationCode'
+        ).limit(10);
         res.json(users);
     } catch (error) {
         console.error('Search users error:', error);

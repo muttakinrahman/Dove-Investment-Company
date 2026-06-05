@@ -103,12 +103,18 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
 
         const query = { role: { $ne: 'admin' } };
         if (search) {
-            query.$or = [
+            const orConditions = [
                 { phone: { $regex: search, $options: 'i' } },
                 { email: { $regex: search, $options: 'i' } },
                 { fullName: { $regex: search, $options: 'i' } },
                 { invitationCode: { $regex: search, $options: 'i' } }
             ];
+            // If search is a number, also search by memberId
+            const memberIdNum = parseInt(search, 10);
+            if (!isNaN(memberIdNum)) {
+                orConditions.push({ memberId: memberIdNum });
+            }
+            query.$or = orConditions;
         }
 
         const sortOptions = {};
@@ -424,7 +430,7 @@ router.get('/deposits', authMiddleware, adminMiddleware, async (req, res) => {
         const query = status ? { status } : {};
 
         const deposits = await Deposit.find(query)
-            .populate('userId', 'phone invitationCode fullName')
+            .populate('userId', 'phone invitationCode fullName memberId email')
             .sort({ createdAt: -1 });
 
         res.json(deposits);
@@ -935,16 +941,21 @@ router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res)
             return res.json([]);
         }
 
+        const orConditions = [
+            { phone: { $regex: q.trim(), $options: 'i' } },
+            { email: { $regex: q.trim(), $options: 'i' } },
+            { fullName: { $regex: q.trim(), $options: 'i' } },
+            { invitationCode: { $regex: q.trim(), $options: 'i' } }
+        ];
+        const memberIdNum = parseInt(q.trim(), 10);
+        if (!isNaN(memberIdNum)) {
+            orConditions.push({ memberId: memberIdNum });
+        }
         const users = await User.find({
             role: { $ne: 'admin' },
-            $or: [
-                { phone: { $regex: q.trim(), $options: 'i' } },
-                { email: { $regex: q.trim(), $options: 'i' } },
-                { fullName: { $regex: q.trim(), $options: 'i' } },
-                { invitationCode: { $regex: q.trim(), $options: 'i' } }
-            ]
+            $or: orConditions
         })
-            .select('fullName phone email invitationCode referredBy vipLevel balance')
+            .select('fullName phone email invitationCode referredBy vipLevel balance memberId')
             .limit(15);
 
         res.json(users);

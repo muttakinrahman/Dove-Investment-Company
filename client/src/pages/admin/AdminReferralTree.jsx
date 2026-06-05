@@ -85,7 +85,7 @@ const AdminReferralTree = () => {
                     <Search size={20} className="text-gray-400 dark:text-white/40 shrink-0" />
                     <input
                         type="text"
-                        placeholder="Search by name, phone, email, or invite code..."
+                        placeholder="Search by ID#, name, phone, email, or invite code..."
                         className="flex-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 text-sm focus:outline-none"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -112,7 +112,7 @@ const AdminReferralTree = () => {
                                 </div>
                                 <div>
                                     <div className="text-gray-900 dark:text-white text-sm font-medium">{getUserLabel(u)}</div>
-                                    <div className="text-gray-500 dark:text-white/40 text-xs">{getUserSub(u)} • Code: {u.invitationCode}</div>
+                                    <div className="text-gray-500 dark:text-white/40 text-xs">{getUserSub(u)} {u.memberId ? `· ID #${u.memberId}` : ''} · Code: {u.invitationCode}</div>
                                 </div>
                                 {u.referredBy ? (
                                     <span className="ml-auto text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">Has Referrer</span>

@@ -7,6 +7,7 @@ const AdminWithdrawals = () => {
     const [withdrawals, setWithdrawals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending');
+    const [searchTerm, setSearchTerm] = useState('');
     const [processingId, setProcessingId] = useState(null);
     const [now, setNow] = useState(new Date());
 
@@ -238,28 +239,65 @@ const AdminWithdrawals = () => {
                 Withdrawal Requests
             </h2>
 
-            {/* Filters */}
-            <div className="flex gap-4 mb-6">
-                {['pending', 'approved', 'rejected'].map(status => (
-                    <button
-                        key={status}
-                        onClick={() => setFilter(status)}
-                        className={`px-4 py-2 rounded-lg capitalize transition-colors ${filter === status
-                            ? 'bg-blue-600 text-gray-900 dark:text-white'
-                            : 'bg-white dark:bg-dark-200 text-gray-900/60 dark:text-white/60 hover:text-white'
-                            }`}
-                    >
-                        {status}
-                    </button>
-                ))}
+            {/* Filters + Search */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                {/* Search Box */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                        type="search"
+                        placeholder="Search by ID#, name, phone..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm w-full sm:w-56"
+                    />
+                </div>
+                <div className="flex gap-2">
+                    {['pending', 'approved', 'rejected'].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilter(status)}
+                            className={`px-4 py-2 rounded-lg capitalize transition-colors ${filter === status
+                                ? 'bg-blue-600 text-gray-900 dark:text-white'
+                                : 'bg-white dark:bg-dark-200 text-gray-900/60 dark:text-white/60 hover:text-white'
+                                }`}
+                        >
+                            {status}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* List */}
             <div className="space-y-4">
-                {withdrawals.length === 0 ? (
+                {withdrawals.filter(item => {
+                    if (!searchTerm.trim()) return true;
+                    const s = searchTerm.trim().toLowerCase();
+                    const memberId = item.userId?.memberId ? String(item.userId.memberId) : '';
+                    return (
+                        memberId.includes(s) ||
+                        (item.userId?.fullName || '').toLowerCase().includes(s) ||
+                        (item.userId?.phone || '').includes(s) ||
+                        (item.userId?.email || '').toLowerCase().includes(s) ||
+                        (item.userId?.invitationCode || '').toLowerCase().includes(s)
+                    );
+                }).length === 0 ? (
                     <div className="text-center py-10 text-gray-900/40 dark:text-white/40">No withdrawals found</div>
                 ) : (
-                    withdrawals.map((item) => (
+                    withdrawals
+                    .filter(item => {
+                        if (!searchTerm.trim()) return true;
+                        const s = searchTerm.trim().toLowerCase();
+                        const memberId = item.userId?.memberId ? String(item.userId.memberId) : '';
+                        return (
+                            memberId.includes(s) ||
+                            (item.userId?.fullName || '').toLowerCase().includes(s) ||
+                            (item.userId?.phone || '').includes(s) ||
+                            (item.userId?.email || '').toLowerCase().includes(s) ||
+                            (item.userId?.invitationCode || '').toLowerCase().includes(s)
+                        );
+                    })
+                    .map((item) => (
                         <div key={item._id} className="glass-card p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -289,7 +327,7 @@ const AdminWithdrawals = () => {
                                     <span className="text-sm text-gray-900/60 dark:text-white/60">• {item.paymentMethod}</span>
                                 </div>
                                 <div className="text-sm text-gray-900/80 dark:text-white/80 space-y-1">
-                                    <div>User: <span className="text-primary font-bold">{item.userId?.fullName || item.userId?.phone}</span></div>
+                                    <div>User: <span className="text-primary font-bold">{item.userId?.fullName || item.userId?.phone}</span>{item.userId?.memberId ? <span className="ml-2 text-blue-400 font-mono text-xs">ID #{item.userId.memberId}</span> : null}</div>
                                     <div className="flex gap-2 text-xs flex-wrap">
                                         <span className="bg-gray-900/5 dark:bg-white/5 px-2 py-1 rounded">Total Deposit: ${item.totalDeposits || 0}</span>
                                         <span className="bg-gray-900/5 dark:bg-white/5 px-2 py-1 rounded text-yellow-400">Total Withdraw: ${item.totalWithdrawals || 0}</span>

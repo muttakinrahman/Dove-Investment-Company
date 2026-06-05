@@ -179,7 +179,7 @@ const AdminUsers = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/40 dark:text-white/40" size={18} />
                     <input
                         type="search"
-                        placeholder="Search users..."
+                        placeholder="Search by ID, name, phone, email..."
                         className="bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 w-full text-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -193,6 +193,7 @@ const AdminUsers = () => {
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-white/10 bg-gray-900/5 dark:bg-white/5">
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">User</th>
+                                <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">ID #</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Invite Code</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Total Balance</th>
                                 <th className="p-4 text-xs font-bold text-gray-900/60 dark:text-white/60 uppercase">Level</th>
@@ -223,6 +224,9 @@ const AdminUsers = () => {
                                                 )}
                                             </div>
                                             <div className="text-gray-900/60 dark:text-white/60 text-xs">{user.email || user.phone || 'No Contact'}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="text-blue-400 font-mono font-bold text-sm">#{user.memberId || '—'}</span>
                                         </td>
                                         <td className="p-4 text-gray-900/60 dark:text-white/60 text-xs font-mono">{user.invitationCode || 'N/A'}</td>
                                         <td className="p-4 text-sm">

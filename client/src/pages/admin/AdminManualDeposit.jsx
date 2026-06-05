@@ -92,7 +92,8 @@ const AdminManualDeposit = () => {
             (u.phone && u.phone.includes(search)) ||
             (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
             (u.fullName && u.fullName.toLowerCase().includes(search.toLowerCase())) ||
-            (u.invitationCode && u.invitationCode.toLowerCase().includes(search.toLowerCase()))
+            (u.invitationCode && u.invitationCode.toLowerCase().includes(search.toLowerCase())) ||
+            (u.memberId && String(u.memberId).includes(search))
         )
         : [];
 
@@ -119,7 +120,7 @@ const AdminManualDeposit = () => {
                             type="text"
                             value={search}
                             onChange={handleSearch}
-                            placeholder="Search by phone, email, name or invite code..."
+                            placeholder="Search by ID#, phone, email, name or invite code..."
                             className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-dark-300 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
                         />
                     </div>
@@ -141,7 +142,7 @@ const AdminManualDeposit = () => {
                                             {u.fullName || 'No Name'}
                                         </div>
                                         <div className="text-gray-500 dark:text-white/50 text-xs truncate">
-                                            {u.phone || u.email} · Balance: ${(u.balance || 0).toFixed(2)}
+                                            {u.memberId ? <span className="text-blue-400 font-mono">ID #{u.memberId} · </span> : null}{u.phone || u.email} · Balance: ${(u.balance || 0).toFixed(2)}
                                         </div>
                                     </div>
                                     <span className="ml-auto text-xs text-primary font-mono">{u.invitationCode}</span>

@@ -147,8 +147,10 @@ const AdminSupport = () => {
     const filteredConversations = conversations.filter(conv => {
         const fullName = conv.userInfo?.fullName || '';
         const phone = conv.userInfo?.phone || '';
+        const memberId = conv.userInfo?.memberId ? String(conv.userInfo.memberId) : '';
         return fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            phone.includes(searchTerm);
+            phone.includes(searchTerm) ||
+            memberId.includes(searchTerm);
     });
 
     return (
@@ -177,7 +179,7 @@ const AdminSupport = () => {
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30" size={15} />
                                     <input
                                         type="text"
-                                        placeholder="Name, phone or email..."
+                                        placeholder="ID#, Name, phone or email..."
                                         value={userSearchQuery}
                                         onChange={(e) => handleUserSearch(e.target.value)}
                                         className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-9 pr-4 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
@@ -278,7 +280,7 @@ const AdminSupport = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/20 dark:text-white/20" size={16} />
                         <input
                             type="text"
-                            placeholder="Search user..."
+                            placeholder="Search by ID# or name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
@@ -313,7 +315,7 @@ const AdminSupport = () => {
                                             {formatDistanceToNow(new Date(conv.lastMessageAt), { addSuffix: true })}
                                         </span>
                                     </div>
-                                    <p className="text-[10px] text-primary mb-1 font-bold">{conv.userInfo.phone}</p>
+                                    <p className="text-[10px] text-primary mb-1 font-bold">{conv.userInfo.phone}{conv.userInfo.memberId ? <span className="ml-1 text-blue-400 font-mono">· ID #{conv.userInfo.memberId}</span> : null}</p>
                                     <p className="text-[11px] text-gray-900/60 dark:text-white/60 truncate italic">"{conv.lastMessage}"</p>
                                 </div>
                             </button>

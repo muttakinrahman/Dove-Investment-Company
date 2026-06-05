@@ -438,7 +438,7 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req, res) => {
         const query = status ? { status } : {};
 
         const withdrawals = await Withdrawal.find(query)
-            .populate('userId', 'phone fullName invitationCode balance')
+            .populate('userId', 'phone fullName invitationCode balance memberId email')
             .populate('processedBy', 'phone')
             .sort({ createdAt: -1 })
             .limit(parseInt(limit));

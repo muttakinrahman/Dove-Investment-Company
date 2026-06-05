@@ -7,6 +7,7 @@ const AdminDeposits = () => {
     const [deposits, setDeposits] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, pending, approved, rejected
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchDeposits = async () => {
         try {
@@ -75,19 +76,33 @@ const AdminDeposits = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Manage Deposits</h2>
 
-                <div className="flex bg-white dark:bg-dark-200 p-1 rounded-lg border border-slate-200 dark:border-white/5">
-                    {['all', 'pending', 'approved', 'rejected'].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setFilter(status)}
-                            className={`px-4 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${filter === status
-                                ? 'bg-primary text-gray-900 dark:text-white shadow-lg'
-                                : 'text-gray-900/60 dark:text-white/60 hover:text-white'
-                                }`}
-                        >
-                            {status}
-                        </button>
-                    ))}
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    {/* Search Box */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-900/40 dark:text-white/40" size={16} />
+                        <input
+                            type="search"
+                            placeholder="Search by ID#, name, phone..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-lg pl-9 pr-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm w-full sm:w-56"
+                        />
+                    </div>
+
+                    <div className="flex bg-white dark:bg-dark-200 p-1 rounded-lg border border-slate-200 dark:border-white/5">
+                        {['all', 'pending', 'approved', 'rejected'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setFilter(status)}
+                                className={`px-4 py-1.5 rounded-md text-xs font-medium capitalize transition-all ${filter === status
+                                    ? 'bg-primary text-gray-900 dark:text-white shadow-lg'
+                                    : 'text-gray-900/60 dark:text-white/60 hover:text-white'
+                                    }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -123,11 +138,25 @@ const AdminDeposits = () => {
                                     <td colSpan="7" className="p-8 text-center text-gray-900/40 dark:text-white/40 text-sm">No deposits found.</td>
                                 </tr>
                             ) : (
-                                deposits.map((deposit) => (
+                                deposits
+                                .filter(deposit => {
+                                    if (!searchTerm.trim()) return true;
+                                    const s = searchTerm.trim().toLowerCase();
+                                    const memberId = deposit.userId?.memberId ? String(deposit.userId.memberId) : '';
+                                    return (
+                                        memberId.includes(s) ||
+                                        (deposit.userId?.fullName || '').toLowerCase().includes(s) ||
+                                        (deposit.userId?.phone || '').includes(s) ||
+                                        (deposit.userId?.email || '').toLowerCase().includes(s) ||
+                                        (deposit.userId?.invitationCode || '').toLowerCase().includes(s)
+                                    );
+                                })
+                                .map((deposit) => (
                                     <tr key={deposit._id} className="hover:bg-white/5 transition-colors">
                                         <td className="p-4">
                                             <div className="text-gray-900 dark:text-white font-medium text-sm">{deposit.userId?.fullName || 'No Name'}</div>
                                             <div className="text-gray-900/70 dark:text-white/70 text-xs">{deposit.userId?.phone || 'Unknown'}</div>
+                                            {deposit.userId?.memberId && <div className="text-blue-400 text-xs font-mono font-bold">ID #{deposit.userId.memberId}</div>}
                                             <div className="text-gray-900/40 dark:text-white/40 text-xs">Code: {deposit.userId?.invitationCode}</div>
                                         </td>
                                         <td className="p-4 text-gray-900 dark:text-white font-bold text-sm">${deposit.amount}</td>
