@@ -143,8 +143,11 @@ const AdminDeposits = () => {
                                     if (!searchTerm.trim()) return true;
                                     const s = searchTerm.trim().toLowerCase();
                                     const memberId = deposit.userId?.memberId ? String(deposit.userId.memberId) : '';
+                                    const isNumeric = /^\d+$/.test(s);
+                                    if (isNumeric) {
+                                        return memberId === s;
+                                    }
                                     return (
-                                        memberId.includes(s) ||
                                         (deposit.userId?.fullName || '').toLowerCase().includes(s) ||
                                         (deposit.userId?.phone || '').includes(s) ||
                                         (deposit.userId?.email || '').toLowerCase().includes(s) ||

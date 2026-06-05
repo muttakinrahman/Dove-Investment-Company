@@ -25,8 +25,9 @@ const AdminTeamView = () => {
         setQuery(val);
         setSelectedUser(null);
         setTeamData(null);
-        if (searchTimeout.current) clearTimeout(searchTimeout.current);
-        if (val.trim().length < 2) { setSearchResults([]); return; }
+        const trimmed = val.trim();
+        const isNumeric = /^\d+$/.test(trimmed);
+        if (isNumeric ? trimmed.length < 1 : trimmed.length < 2) { setSearchResults([]); return; }
         setSearchLoading(true);
         searchTimeout.current = setTimeout(async () => {
             try {

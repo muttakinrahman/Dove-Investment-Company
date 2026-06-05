@@ -158,19 +158,22 @@ router.get('/admin/search-users', authMiddleware, async (req, res) => {
         if (!q || q.trim().length < 1) {
             return res.status(400).json({ message: 'Query must be at least 1 character' });
         }
-        const searchOrConditions = [
-            { fullName: new RegExp(q.trim(), 'i') },
-            { phone: new RegExp(q.trim(), 'i') },
-            { email: new RegExp(q.trim(), 'i') },
-            { invitationCode: new RegExp(q.trim(), 'i') }
-        ];
-        // memberId is a Number — match exactly if query is numeric
-        const memberIdNum = parseInt(q.trim(), 10);
-        if (!isNaN(memberIdNum)) {
-            searchOrConditions.push({ memberId: memberIdNum });
+        const isNumeric = /^\d+$/.test(q.trim());
+        let findQuery;
+        if (isNumeric) {
+            findQuery = { memberId: parseInt(q.trim(), 10) };
+        } else {
+            findQuery = {
+                $or: [
+                    { fullName: new RegExp(q.trim(), 'i') },
+                    { phone: new RegExp(q.trim(), 'i') },
+                    { email: new RegExp(q.trim(), 'i') },
+                    { invitationCode: new RegExp(q.trim(), 'i') }
+                ]
+            };
         }
         const users = await User.find(
-            { $or: searchOrConditions },
+            findQuery,
             '_id fullName phone email profileImage memberId invitationCode'
         ).limit(10);
         res.json(users);

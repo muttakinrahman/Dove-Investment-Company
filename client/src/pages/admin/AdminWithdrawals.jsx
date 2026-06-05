@@ -274,8 +274,11 @@ const AdminWithdrawals = () => {
                     if (!searchTerm.trim()) return true;
                     const s = searchTerm.trim().toLowerCase();
                     const memberId = item.userId?.memberId ? String(item.userId.memberId) : '';
+                    const isNumeric = /^\d+$/.test(s);
+                    if (isNumeric) {
+                        return memberId === s;
+                    }
                     return (
-                        memberId.includes(s) ||
                         (item.userId?.fullName || '').toLowerCase().includes(s) ||
                         (item.userId?.phone || '').includes(s) ||
                         (item.userId?.email || '').toLowerCase().includes(s) ||
@@ -289,8 +292,11 @@ const AdminWithdrawals = () => {
                         if (!searchTerm.trim()) return true;
                         const s = searchTerm.trim().toLowerCase();
                         const memberId = item.userId?.memberId ? String(item.userId.memberId) : '';
+                        const isNumeric = /^\d+$/.test(s);
+                        if (isNumeric) {
+                            return memberId === s;
+                        }
                         return (
-                            memberId.includes(s) ||
                             (item.userId?.fullName || '').toLowerCase().includes(s) ||
                             (item.userId?.phone || '').includes(s) ||
                             (item.userId?.email || '').toLowerCase().includes(s) ||

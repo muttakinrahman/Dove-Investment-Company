@@ -102,7 +102,9 @@ const AdminSupport = () => {
         setUserSearchQuery(val);
         setSelectedNewUser(null);
         if (searchTimeout.current) clearTimeout(searchTimeout.current);
-        if (val.trim().length < 2) { setUserSearchResults([]); return; }
+        const trimmed = val.trim();
+        const isNumeric = /^\d+$/.test(trimmed);
+        if (isNumeric ? trimmed.length < 1 : trimmed.length < 2) { setUserSearchResults([]); return; }
         setSearchLoading(true);
         searchTimeout.current = setTimeout(async () => {
             try {
@@ -145,12 +147,17 @@ const AdminSupport = () => {
     };
 
     const filteredConversations = conversations.filter(conv => {
+        const s = searchTerm.trim().toLowerCase();
+        if (!s) return true;
+        const memberId = conv.userInfo?.memberId ? String(conv.userInfo.memberId) : '';
+        const isNumeric = /^\d+$/.test(s);
+        if (isNumeric) {
+            return memberId === s;
+        }
         const fullName = conv.userInfo?.fullName || '';
         const phone = conv.userInfo?.phone || '';
-        const memberId = conv.userInfo?.memberId ? String(conv.userInfo.memberId) : '';
-        return fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            phone.includes(searchTerm) ||
-            memberId.includes(searchTerm);
+        return fullName.toLowerCase().includes(s) ||
+            phone.includes(s);
     });
 
     return (

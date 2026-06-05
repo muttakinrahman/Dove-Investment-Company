@@ -103,18 +103,18 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
 
         const query = { role: { $ne: 'admin' } };
         if (search) {
-            const orConditions = [
-                { phone: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { fullName: { $regex: search, $options: 'i' } },
-                { invitationCode: { $regex: search, $options: 'i' } }
-            ];
-            // If search is a number, also search by memberId
-            const memberIdNum = parseInt(search, 10);
-            if (!isNaN(memberIdNum)) {
-                orConditions.push({ memberId: memberIdNum });
+            const isNumeric = /^\d+$/.test(search.trim());
+            if (isNumeric) {
+                // Pure number → exact memberId match only
+                query.memberId = parseInt(search.trim(), 10);
+            } else {
+                query.$or = [
+                    { phone: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                    { fullName: { $regex: search, $options: 'i' } },
+                    { invitationCode: { $regex: search, $options: 'i' } }
+                ];
             }
-            query.$or = orConditions;
         }
 
         const sortOptions = {};
@@ -937,24 +937,30 @@ router.get('/referral-chain/:userId', authMiddleware, adminMiddleware, async (re
 router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { q } = req.query;
-        if (!q || q.trim().length < 2) {
+        if (!q || q.trim().length < 1) {
             return res.json([]);
         }
 
-        const orConditions = [
-            { phone: { $regex: q.trim(), $options: 'i' } },
-            { email: { $regex: q.trim(), $options: 'i' } },
-            { fullName: { $regex: q.trim(), $options: 'i' } },
-            { invitationCode: { $regex: q.trim(), $options: 'i' } }
-        ];
-        const memberIdNum = parseInt(q.trim(), 10);
-        if (!isNaN(memberIdNum)) {
-            orConditions.push({ memberId: memberIdNum });
+        const isNumeric = /^\d+$/.test(q.trim());
+        let findQuery;
+        if (isNumeric) {
+            // Pure number → exact memberId match only
+            findQuery = {
+                role: { $ne: 'admin' },
+                memberId: parseInt(q.trim(), 10)
+            };
+        } else {
+            findQuery = {
+                role: { $ne: 'admin' },
+                $or: [
+                    { phone: { $regex: q.trim(), $options: 'i' } },
+                    { email: { $regex: q.trim(), $options: 'i' } },
+                    { fullName: { $regex: q.trim(), $options: 'i' } },
+                    { invitationCode: { $regex: q.trim(), $options: 'i' } }
+                ]
+            };
         }
-        const users = await User.find({
-            role: { $ne: 'admin' },
-            $or: orConditions
-        })
+        const users = await User.find(findQuery)
             .select('fullName phone email invitationCode referredBy vipLevel balance memberId')
             .limit(15);
 

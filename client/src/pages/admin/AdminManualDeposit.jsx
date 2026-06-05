@@ -88,13 +88,19 @@ const AdminManualDeposit = () => {
     };
 
     const filteredUsers = search.length >= 1
-        ? users.filter(u =>
-            (u.phone && u.phone.includes(search)) ||
-            (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
-            (u.fullName && u.fullName.toLowerCase().includes(search.toLowerCase())) ||
-            (u.invitationCode && u.invitationCode.toLowerCase().includes(search.toLowerCase())) ||
-            (u.memberId && String(u.memberId).includes(search))
-        )
+        ? users.filter(u => {
+            const s = search.trim();
+            const isNumeric = /^\d+$/.test(s);
+            if (isNumeric) {
+                return u.memberId && String(u.memberId) === s;
+            }
+            return (
+                (u.phone && u.phone.includes(s)) ||
+                (u.email && u.email.toLowerCase().includes(s.toLowerCase())) ||
+                (u.fullName && u.fullName.toLowerCase().includes(s.toLowerCase())) ||
+                (u.invitationCode && u.invitationCode.toLowerCase().includes(s.toLowerCase()))
+            );
+        })
         : [];
 
     return (
