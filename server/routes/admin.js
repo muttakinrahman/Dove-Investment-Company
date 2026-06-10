@@ -969,6 +969,9 @@ router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res)
     } catch (error) {
         console.error('Referral search error:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // ================= ADMIN: CHANGE CREDENTIALS =================
 router.put('/change-credentials', authMiddleware, adminMiddleware, async (req, res) => {
     try {
