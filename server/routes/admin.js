@@ -13,6 +13,7 @@ import AdminLog from '../models/AdminLog.js';
 import { createNotification } from '../utils/notifications.js';
 import { distributeCommissions } from '../utils/teamCommissions.js';
 import Commission from '../models/Commission.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -968,6 +969,89 @@ router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res)
     } catch (error) {
         console.error('Referral search error:', error);
         res.status(500).json({ message: 'Server error' });
+// ================= ADMIN: CHANGE CREDENTIALS =================
+router.put('/change-credentials', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { phone, email, password } = req.body;
+        const adminId = req.userId;
+
+        const admin = await User.findById(adminId);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        const changes = {};
+
+        if (phone) {
+            const trimPhone = phone.trim();
+            if (trimPhone !== admin.phone) {
+                // Verify uniqueness of the new phone/username
+                const existingPhone = await User.findOne({ phone: trimPhone, _id: { $ne: adminId } });
+                if (existingPhone) {
+                    return res.status(400).json({ message: 'This Username/Phone is already used by another account.' });
+                }
+                changes.oldPhone = admin.phone;
+                changes.newPhone = trimPhone;
+                admin.phone = trimPhone;
+            }
+        }
+
+        if (email) {
+            const lowerEmail = email.toLowerCase().trim();
+            if (lowerEmail !== admin.email) {
+                // Verify uniqueness of the new email
+                const existingEmail = await User.findOne({ email: lowerEmail, _id: { $ne: adminId } });
+                if (existingEmail) {
+                    return res.status(400).json({ message: 'This Email is already used by another account.' });
+                }
+                changes.oldEmail = admin.email;
+                changes.newEmail = lowerEmail;
+                admin.email = lowerEmail;
+            }
+        }
+
+        if (password) {
+            if (password.length < 6) {
+                return res.status(400).json({ message: 'New password must be at least 6 characters long.' });
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            admin.password = hashedPassword;
+            changes.passwordChanged = true;
+        }
+
+        if (Object.keys(changes).length === 0) {
+            return res.status(400).json({ message: 'No changes provided.' });
+        }
+
+        await admin.save();
+
+        // Create log entry for admin credential change
+        await AdminLog.create({
+            adminId: admin._id,
+            action: 'admin_credentials_updated',
+            changes,
+            description: `Admin updated credentials: ${Object.keys(changes).join(', ')}`
+        });
+
+        res.json({
+            success: true,
+            message: 'Admin credentials updated successfully.',
+            user: {
+                id: admin._id,
+                phone: admin.phone,
+                email: admin.email,
+                fullName: admin.fullName,
+                memberId: admin.memberId,
+                invitationCode: admin.invitationCode,
+                balance: admin.balance,
+                totalEarnings: admin.totalEarnings,
+                role: admin.role,
+                twoFactorEnabled: admin.twoFactorEnabled
+            }
+        });
+    } catch (error) {
+        console.error('Change admin credentials error:', error);
+        res.status(500).json({ message: 'Server error updating admin credentials' });
     }
 });
 

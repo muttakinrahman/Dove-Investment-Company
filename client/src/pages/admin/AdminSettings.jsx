@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Settings, Save, AlertCircle, Lock, Unlock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
 
 // Wallet section password - stored only in frontend
 const WALLET_SECTION_PASSWORD = '11aA22@@33';
 
 const AdminSettings = () => {
+    const { user, updateUserInfo } = useAuth();
+
     const [settings, setSettings] = useState({
         companyName: '',
         companyDescription: '',
@@ -23,12 +26,28 @@ const AdminSettings = () => {
     });
     const [loading, setLoading] = useState(true);
 
+    // Admin Credentials State
+    const [adminPhone, setAdminPhone] = useState('');
+    const [adminEmail, setAdminEmail] = useState('');
+    const [newAdminPassword, setNewAdminPassword] = useState('');
+    const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
+    const [showAdminPassword, setShowAdminPassword] = useState(false);
+    const [showAdminConfirmPassword, setShowAdminConfirmPassword] = useState(false);
+    const [updatingCredentials, setUpdatingCredentials] = useState(false);
+
     // Wallet lock state
     const [walletUnlocked, setWalletUnlocked] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [walletPassword, setWalletPassword] = useState('');
     const [showWalletPassword, setShowWalletPassword] = useState(false);
     const [passwordError, setPasswordError] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            setAdminPhone(user.phone || '');
+            setAdminEmail(user.email || '');
+        }
+    }, [user]);
 
     useEffect(() => {
         fetchSettings();
@@ -83,6 +102,52 @@ const AdminSettings = () => {
         } catch (error) {
             console.error('Error updating settings:', error);
             toast.error('Failed to update settings');
+        }
+    };
+
+    const handleUpdateCredentials = async (e) => {
+        e.preventDefault();
+
+        if (!adminPhone.trim()) {
+            toast.error('Admin Username/Phone is required.');
+            return;
+        }
+
+        if (newAdminPassword && newAdminPassword.length < 6) {
+            toast.error('New password must be at least 6 characters long.');
+            return;
+        }
+
+        if (newAdminPassword !== confirmAdminPassword) {
+            toast.error('New password and confirmation do not match.');
+            return;
+        }
+
+        setUpdatingCredentials(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.put('/api/admin/change-credentials', {
+                phone: adminPhone,
+                email: adminEmail,
+                password: newAdminPassword || undefined
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            toast.success('Admin credentials updated successfully.');
+
+            if (res.data.user) {
+                updateUserInfo(res.data.user);
+            }
+
+            setNewAdminPassword('');
+            setConfirmAdminPassword('');
+        } catch (error) {
+            console.error('Error updating admin credentials:', error);
+            const msg = error.response?.data?.message || 'Failed to update credentials.';
+            toast.error(msg);
+        } finally {
+            setUpdatingCredentials(false);
         }
     };
 
@@ -321,6 +386,94 @@ const AdminSettings = () => {
                         <Save size={20} />
                         Save All Changes
                     </button>
+                </div>
+            </form>
+
+            {/* Admin Credentials Form */}
+            <form onSubmit={handleUpdateCredentials} className="mt-8 space-y-6">
+                <div className="glass-card p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b border-slate-200 dark:border-white/10 pb-2 flex items-center gap-2">
+                        <Lock className="text-red-500" size={20} />
+                        Admin Credentials Settings
+                    </h3>
+
+                    <div className="grid gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">Admin Username / Phone</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 font-mono text-sm"
+                                    value={adminPhone}
+                                    onChange={(e) => setAdminPhone(e.target.value)}
+                                    placeholder="Enter admin username or phone"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">Admin Email</label>
+                                <input
+                                    type="email"
+                                    className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm"
+                                    value={adminEmail}
+                                    onChange={(e) => setAdminEmail(e.target.value)}
+                                    placeholder="admin@example.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">New Password (leave blank to keep current)</label>
+                                <div className="relative">
+                                    <input
+                                        type={showAdminPassword ? 'text' : 'password'}
+                                        className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg p-2 pr-10 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm"
+                                        value={newAdminPassword}
+                                        onChange={(e) => setNewAdminPassword(e.target.value)}
+                                        placeholder="Enter new password (min. 6 chars)"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                                    >
+                                        {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-gray-900/60 dark:text-white/60 text-sm mb-1 block">Confirm New Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showAdminConfirmPassword ? 'text' : 'password'}
+                                        className="w-full bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg p-2 pr-10 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 text-sm"
+                                        value={confirmAdminPassword}
+                                        onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                                        placeholder="Confirm new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAdminConfirmPassword(!showAdminConfirmPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                                    >
+                                        {showAdminConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-4">
+                            <button
+                                type="submit"
+                                disabled={updatingCredentials}
+                                className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-gray-900 dark:text-white px-8 py-3 rounded-lg transition-all font-bold text-lg shadow-lg hover:shadow-red-500/20 disabled:opacity-50"
+                            >
+                                <Save size={20} />
+                                {updatingCredentials ? 'Updating Credentials...' : 'Update Admin Credentials'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </form>
 
