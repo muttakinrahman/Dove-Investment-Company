@@ -75,7 +75,7 @@ const AdminLogin = () => {
                         {/* Phone Input */}
                         <div>
                             <label className="block text-gray-900/70 dark:text-white/70 text-sm font-medium mb-2">
-                                Username / Phone
+                                Username / Email / Phone
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -85,7 +85,7 @@ const AdminLogin = () => {
                                     type="text"
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="Enter username"
+                                    placeholder="Enter username, email or phone"
                                     className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-dark-300 border border-slate-200 dark:border-white/10 rounded-lg text-gray-900 dark:text-white placeholder-white/40 focus:border-primary focus:outline-none transition-colors"
                                     required
                                 />
