@@ -141,7 +141,7 @@ const getEmailTemplate = (type, data) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 class="logo">🚀 Dove Investment Gold Mine</h1>
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
                         <p class="tagline">Your Trusted Investment Platform</p>
                     </div>
                     <div class="content">
@@ -195,7 +195,7 @@ const getEmailTemplate = (type, data) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 class="logo">🚀 Dove Investment Gold Mine</h1>
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
                         <p class="tagline">Your Trusted Investment Platform</p>
                     </div>
                     <div class="content">
@@ -257,7 +257,7 @@ const getEmailTemplate = (type, data) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 class="logo">🚀 Dove Investment Gold Mine</h1>
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
                         <p class="tagline">Your Trusted Investment Platform</p>
                     </div>
                     <div class="content">
@@ -309,7 +309,7 @@ const getEmailTemplate = (type, data) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 class="logo">🚀 Dove Investment Gold Mine</h1>
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
                         <p class="tagline">Your Trusted Investment Platform</p>
                     </div>
                     <div class="content">
@@ -353,7 +353,7 @@ const getEmailTemplate = (type, data) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1 class="logo">🚀 Dove Investment Gold Mine</h1>
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
                         <p class="tagline">Your Trusted Investment Platform</p>
                     </div>
                     <div class="content">
