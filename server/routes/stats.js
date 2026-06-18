@@ -24,21 +24,27 @@ router.get('/user-history', authMiddleware, async (req, res) => {
         const totalWithdrawn = withdrawals.reduce((sum, w) => sum + w.amount, 0);
 
         // 2. Team Breakdown (3 Generations)
+        // Helper to compute total balance for active checks
+        const getMemberTotalBalance = (u) => {
+            const activeInvTotal = (u.investments || [])
+                .filter(inv => inv.status === 'active')
+                .reduce((sum, inv) => sum + (inv.package?.investmentAmount || 0), 0);
+            return (u.balance || 0) + activeInvTotal;
+        };
+
         // Gen 1
-        const gen1 = await User.find({ referredBy: user.invitationCode }, 'invitationCode isTeamMember');
-        const gen1Count = gen1.filter(u => u.isTeamMember).length;
+        const gen1 = await User.find({ referredBy: user.invitationCode }, 'invitationCode isTeamMember balance investments');
+        const gen1Count = gen1.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
         const gen1Codes = gen1.map(u => u.invitationCode);
 
         // Gen 2
-        const gen2 = await User.find({ referredBy: { $in: gen1Codes } }, 'invitationCode isTeamMember');
-        const gen2Count = gen2.filter(u => u.isTeamMember).length;
+        const gen2 = await User.find({ referredBy: { $in: gen1Codes } }, 'invitationCode isTeamMember balance investments');
+        const gen2Count = gen2.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
         const gen2Codes = gen2.map(u => u.invitationCode);
 
         // Gen 3
-        const gen3Count = await User.countDocuments({
-            referredBy: { $in: gen2Codes },
-            isTeamMember: true
-        });
+        const gen3Users = await User.find({ referredBy: { $in: gen2Codes } }, 'invitationCode isTeamMember balance investments');
+        const gen3Count = gen3Users.filter(u => u.isTeamMember && getMemberTotalBalance(u) >= 50).length;
 
         // 3. Transaction History (Recent Notifications)
         const history = await Notification.find({
@@ -81,7 +87,7 @@ async function getAllDownline(invitationCode) {
     while (currentCodes.length > 0) {
         const nextUsers = await User.find(
             { referredBy: { $in: currentCodes } },
-            '_id invitationCode fullName email phone'
+            '_id invitationCode fullName email phone balance investments isTeamMember'
         );
         if (nextUsers.length === 0) break;
         
@@ -134,7 +140,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen1 = await Promise.all(gen1Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited;
+            const isActiveMember = hasDeposited && u.isTeamMember && totalBalance >= 50;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -159,7 +165,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen2 = await Promise.all(gen2Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited;
+            const isActiveMember = hasDeposited && u.isTeamMember && totalBalance >= 50;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -184,7 +190,7 @@ router.get('/team-list', authMiddleware, async (req, res) => {
         const gen3 = await Promise.all(gen3Users.map(async (u) => {
             const hasDeposited = await checkDeposit(u._id);
             const totalBalance = computeTotalBalance(u);
-            const isActiveMember = hasDeposited;
+            const isActiveMember = hasDeposited && u.isTeamMember && totalBalance >= 50;
             return {
                 _id: u._id,
                 phone: u.phone,
@@ -231,7 +237,9 @@ router.get('/team-list', authMiddleware, async (req, res) => {
             let activeCountTemp = 0;
             for (const u of userDownline.users) {
                 const hasDeposited = depositedSet.has(u._id.toString());
-                if (hasDeposited) activeCountTemp++;
+                const totalBalance = computeTotalBalance(u);
+                const isActive = hasDeposited && u.isTeamMember && totalBalance >= 50;
+                if (isActive) activeCountTemp++;
             }
             activeCount = activeCountTemp;
 
