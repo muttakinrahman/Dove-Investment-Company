@@ -86,6 +86,28 @@ const MyTeam = () => {
                                 Active Members: {teamListData?.activeCount ?? 0}
                             </span>
                         </div>
+
+                        {/* Generation-wise Active Count Breakdown */}
+                        <div className="mt-4 grid grid-cols-3 gap-2 max-w-xs mx-auto border-t border-gray-900/10 dark:border-white/10 pt-4">
+                            <div className="text-center">
+                                <p className="text-[9px] text-gray-900/40 dark:text-white/40 font-black uppercase tracking-widest">Gen 1 Active</p>
+                                <p className="text-base font-black text-green-500 dark:text-green-400 mt-1">
+                                    {teamListData?.gen1?.filter(m => m.isActiveMember).length || 0}
+                                </p>
+                            </div>
+                            <div className="text-center border-l border-r border-gray-900/10 dark:border-white/10">
+                                <p className="text-[9px] text-gray-900/40 dark:text-white/40 font-black uppercase tracking-widest">Gen 2 Active</p>
+                                <p className="text-base font-black text-green-500 dark:text-green-400 mt-1">
+                                    {teamListData?.gen2?.filter(m => m.isActiveMember).length || 0}
+                                </p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-[9px] text-gray-900/40 dark:text-white/40 font-black uppercase tracking-widest">Gen 3 Active</p>
+                                <p className="text-base font-black text-green-500 dark:text-green-400 mt-1">
+                                    {teamListData?.gen3?.filter(m => m.isActiveMember).length || 0}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
