@@ -20,11 +20,16 @@ self.addEventListener('install', (event) => {
 
 // Network First Strategy
 self.addEventListener('fetch', (event) => {
+    // Only intercept GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     event.respondWith(
         fetch(event.request)
             .then((response) => {
                 // Only cache GET requests (Cache API doesn't support POST, PUT, etc.)
-                if (event.request.method === 'GET' && response && response.status === 200 && response.type === 'basic') {
+                if (response && response.status === 200 && response.type === 'basic') {
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then((cache) => {
                         cache.put(event.request, responseToCache);
@@ -32,9 +37,24 @@ self.addEventListener('fetch', (event) => {
                 }
                 return response;
             })
-            .catch(() => {
+            .catch(async () => {
                 // If network fails, try the cache
-                return caches.match(event.request);
+                const cachedResponse = await caches.match(event.request);
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                // Fallback to index.html for navigation requests
+                if (event.request.mode === 'navigate') {
+                    const offlinePage = await caches.match('/index.html');
+                    if (offlinePage) {
+                        return offlinePage;
+                    }
+                }
+                return new Response('Network error occurred', {
+                    status: 503,
+                    statusText: 'Service Unavailable',
+                    headers: new Headers({ 'Content-Type': 'text/plain' })
+                });
             })
     );
 });

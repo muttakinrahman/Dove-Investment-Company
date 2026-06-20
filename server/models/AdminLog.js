@@ -36,7 +36,8 @@ const adminLogSchema = new mongoose.Schema({
             'team_business_view_disabled',
             'lend_released_to_balance',
             'deposit_revoked',
-            'admin_credentials_updated'
+            'admin_credentials_updated',
+            'broadcast_notification'
         ]
     },
     targetUserId: {
