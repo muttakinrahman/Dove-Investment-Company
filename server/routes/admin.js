@@ -14,6 +14,7 @@ import { createNotification } from '../utils/notifications.js';
 import { distributeCommissions } from '../utils/teamCommissions.js';
 import Commission from '../models/Commission.js';
 import bcrypt from 'bcryptjs';
+import Notification from '../models/Notification.js';
 
 const router = express.Router();
 
@@ -1055,6 +1056,52 @@ router.put('/change-credentials', authMiddleware, adminMiddleware, async (req, r
     } catch (error) {
         console.error('Change admin credentials error:', error);
         res.status(500).json({ message: 'Server error updating admin credentials' });
+    }
+});
+
+// ================= BROADCAST NOTIFICATIONS =================
+// Admin sends a notification to all users
+router.post('/broadcast-notification', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { title, message, type = 'system' } = req.body;
+
+        if (!title || !message) {
+            return res.status(400).json({ message: 'Title and message are required.' });
+        }
+
+        // Get all users who are not admins
+        const users = await User.find({ role: { $ne: 'admin' } }).select('_id');
+
+        if (users.length === 0) {
+            return res.status(400).json({ message: 'No users found to send notifications to.' });
+        }
+
+        // Prepare notifications for insertMany
+        const notificationsData = users.map(u => ({
+            userId: u._id,
+            title,
+            message,
+            type,
+            status: 'unread'
+        }));
+
+        await Notification.insertMany(notificationsData);
+
+        // Create log entry for admin action
+        await AdminLog.create({
+            adminId: req.userId,
+            action: 'broadcast_notification',
+            changes: { title, message, type },
+            description: `Broadcasted notification to all (${users.length}) users: "${title}"`
+        });
+
+        res.json({
+            success: true,
+            message: `Notification broadcasted to all ${users.length} users successfully.`
+        });
+    } catch (error) {
+        console.error('Broadcast notification error:', error);
+        res.status(500).json({ message: 'Server error broadcasting notification' });
     }
 });
 

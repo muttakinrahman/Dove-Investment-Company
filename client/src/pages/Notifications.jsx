@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import SuccessModal from '../components/SuccessModal';
+import NotificationDetailModal from '../components/NotificationDetailModal';
 
 const Notifications = () => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [selectedNotification, setSelectedNotification] = useState(null);
     const [modalConfig, setModalConfig] = useState({
         isOpen: false,
         title: '',
@@ -160,13 +162,7 @@ const Notifications = () => {
                                 key={notif._id}
                                 onClick={() => {
                                     if (notif.status === 'unread') markAsRead(notif._id);
-                                    if (notif.type === 'withdrawal' && notif.title.toLowerCase().includes('approved')) {
-                                        if (notif.relatedId) navigate(`/withdrawal-success/${notif.relatedId}`);
-                                    } else if (notif.type === 'bonus') {
-                                        navigate(`/bonus-success/${notif._id}`);
-                                    } else if (notif.title.toLowerCase().includes('approved') || notif.message.toLowerCase().includes('approved')) {
-                                        setModalConfig({ isOpen: true, title: notif.title, message: notif.message });
-                                    }
+                                    setSelectedNotification(notif);
                                 }}
                                 className={`bg-white dark:bg-dark-200 rounded-[1.8rem] p-5 shadow-lg border-2 transition-all active:scale-[0.97] cursor-pointer relative overflow-hidden group 
                                     ${notif.status === 'unread' 
@@ -235,6 +231,11 @@ const Notifications = () => {
                 onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
                 title={modalConfig.title}
                 message={modalConfig.message}
+            />
+            <NotificationDetailModal
+                isOpen={!!selectedNotification}
+                onClose={() => setSelectedNotification(null)}
+                notification={selectedNotification}
             />
         </div>
     );
