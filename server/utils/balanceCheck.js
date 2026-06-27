@@ -140,6 +140,13 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
             console.log(`[BalanceCheck] RECOVERED ${user.email || user.phone}. Balance: $${totalBalance.toFixed(2)}`);
         }
 
+        // Restore team member status if they are not currently marked as active
+        if (!user.isTeamMember) {
+            user.isTeamMember = true;
+            dirty = true;
+            console.log(`[BalanceCheck] RESTORED team member status for ${user.email || user.phone}. Balance: $${totalBalance.toFixed(2)}`);
+        }
+
         if (dirty && saveUser) {
             await user.save();
         }

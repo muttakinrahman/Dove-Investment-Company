@@ -249,7 +249,7 @@ const Withdraw = () => {
                             <input
                                 type="number"
                                 required
-                                min="20"
+                                min="10"
                                 placeholder="0.00"
                                 className="w-full bg-white dark:bg-dark-200 border border-slate-200 dark:border-white/10 rounded-2xl py-4 pl-10 pr-4 text-gray-900 dark:text-white text-xl font-bold focus:outline-none focus:border-primary focus:bg-gray-50 dark:focus:bg-dark-100 transition-all"
                                 value={amount}
@@ -257,7 +257,7 @@ const Withdraw = () => {
                             />
                         </div>
                         <div className="flex justify-between px-1">
-                            <p className="text-gray-900/40 dark:text-white/40 text-xs text-secondary">Minimum withdrawal: $20</p>
+                            <p className="text-gray-900/40 dark:text-white/40 text-xs text-secondary">Minimum withdrawal: $10</p>
                             <button
                                 type="button"
                                 onClick={handleSetMaxAmount}

@@ -143,8 +143,8 @@ async function checkUser() {
         console.log('🎯 সর্বোচ্চ Withdraw করতে পারবে');
         console.log('═══════════════════════════════════════════════════');
         console.log(`  Max Withdrawable : $${maxW}`);
-        if (maxW < 20) {
-            console.log(`  ⚠️  Minimum $20 দরকার — এখন withdraw করতে পারবে না!`);
+        if (maxW < 10) {
+            console.log(`  ⚠️  Minimum $10 দরকার — এখন withdraw করতে পারবে না!`);
             if (remainingCap <= 0) {
                 console.log(`  📌 কারণ: 150% cap শেষ হয়ে গেছে। আরো deposit করতে হবে।`);
             } else if (!reserveOk) {
