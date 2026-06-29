@@ -95,7 +95,7 @@ router.get('/wallets', async (req, res) => {
                 BTC:   settings.walletBTC,
                 ETH:   settings.walletETH,
             },
-            minDepositAmount: 10,
+            minDepositAmount: 30,
         });
     } catch (err) {
         console.error('[Wallets]', err.message);
@@ -129,8 +129,8 @@ router.post('/create-payment', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Invalid amount' });
         }
 
-        // Min deposit check — hardcoded to 10 USDT
-        const MIN_DEPOSIT = 10;
+        // Min deposit check — hardcoded to 30 USDT
+        const MIN_DEPOSIT = 30;
         if (numAmount < MIN_DEPOSIT) {
             return res.status(400).json({ message: `Minimum deposit is $${MIN_DEPOSIT} USDT` });
         }
@@ -355,7 +355,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        const MIN_DEPOSIT = 10;
+        const MIN_DEPOSIT = 30;
         if (parseFloat(amount) < MIN_DEPOSIT) {
             return res.status(400).json({ message: `Minimum deposit is $${MIN_DEPOSIT} USDT` });
         }
