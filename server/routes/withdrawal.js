@@ -148,14 +148,14 @@ router.post('/request', authMiddleware, async (req, res) => {
             });
             const hasEnoughReferrals = activeLevel1Referrals >= 3;
 
-            const MINIMUM_RESERVE = 50;
+            const MINIMUM_RESERVE = 30;
             const activeLendBalance = user.investments
                 .filter(inv => inv.status === 'active')
                 .reduce((sum, inv) => sum + inv.package.investmentAmount, 0);
 
             if (hasEnoughReferrals) {
                 // ✅ 3+ Gen1 referral আছে → 150% cap নেই, withdraw মুক্ত
-                // তবে Phase 2 (cap পার হলে) account এ $50 রাখতে হবে
+                // তবে Phase 2 (cap পার হলে) account এ $30 রাখতে হবে
                 if (isPhase2) {
                     const balanceAfterWithdrawal = user.balance - totalAmount;
                     const totalReserveAfter = balanceAfterWithdrawal + activeLendBalance;
@@ -277,7 +277,7 @@ router.get('/eligibility', authMiddleware, async (req, res) => {
         });
         const hasEnoughReferrals = activeLevel1Referrals >= 3;
 
-        const MINIMUM_RESERVE = 50;
+        const MINIMUM_RESERVE = 30;
 
         // --- Calculate maxWithdrawable based on phase ---
         let maxWithdrawable;

@@ -199,8 +199,8 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // ⚠️ Balance Warning System — tracks when user's balance dropped below $50
-    // After 3 days still below $50 → isTeamMember = false (auto-inactive)
+    // ⚠️ Balance Warning System — tracks when user's balance dropped below $30
+    // After 3 days still below $30 → isTeamMember = false (auto-inactive)
     balanceWarningDate: {
         type: Date,
         default: null

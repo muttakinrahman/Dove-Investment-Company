@@ -53,11 +53,11 @@ async function main() {
             const hasDeposited = !!deposit;
             const totalBalance = getMemberTotalBalance(u);
             const isTeamMember = u.isTeamMember;
-            const isFullyActive = isTeamMember && totalBalance >= 50;
+            const isFullyActive = isTeamMember && totalBalance >= 30;
 
             if (hasDeposited) countHasDeposited++;
             if (isTeamMember) countIsTeamMember++;
-            if (totalBalance >= 50) countBalanceGe50++;
+            if (totalBalance >= 30) countBalanceGe50++;
             if (isFullyActive) countFullyActiveForLevel++;
 
             const contact = u.phone || u.email || 'N/A';
@@ -76,8 +76,8 @@ async function main() {
         console.log(`- Total registered Gen 1: ${gen1Users.length}`);
         console.log(`- Has at least 1 approved deposit: ${countHasDeposited}`);
         console.log(`- Has isTeamMember === true: ${countIsTeamMember}`);
-        console.log(`- Has total balance >= $50: ${countBalanceGe50}`);
-        console.log(`- Fully Active for Level Up (isTeamMember && balance >= $50): ${countFullyActiveForLevel}`);
+        console.log(`- Has total balance >= $30: ${countBalanceGe50}`);
+        console.log(`- Fully Active for Level Up (isTeamMember && balance >= $30): ${countFullyActiveForLevel}`);
         
         await conn.close();
         process.exit(0);

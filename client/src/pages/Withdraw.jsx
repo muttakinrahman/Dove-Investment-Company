@@ -139,7 +139,7 @@ const Withdraw = () => {
             } else if (errData?.code === 'INSUFFICIENT_REFERRALS') {
                 toast.error(`❌ You need 3 active referrals to continue! You have ${errData.activeReferrals}.`);
             } else if (errData?.code === 'INSUFFICIENT_RESERVE') {
-                toast.error(`❌ Must keep $50 in account. Max: $${errData.maxWithdrawable}`);
+                toast.error(`❌ Must keep $30 in account. Max: $${errData.maxWithdrawable}`);
             } else if (errData?.code === 'WITHDRAWAL_LIMIT_EXCEEDED' || errData?.code === 'WITHIN_CAP_LIMIT_EXCEEDED') {
                 toast.error(`❌ Limit exceeded! Remaining: $${errData.remainingLimit?.toFixed(2)}`);
             } else {
@@ -340,8 +340,8 @@ const Withdraw = () => {
                             </div>
                             {!eligibility?.hasEnoughReferrals && (
                                 <div className="flex justify-between items-center text-[10px] pt-1">
-                                    <span className="text-gray-900/50 dark:text-white/50">Balance After (min $50 reserve)</span>
-                                    <span className={`font-bold ${(user?.balance - Number(amount) * (1 + feeRate)) < 50 ? 'text-red-400' : 'text-green-400'}`}>
+                                    <span className="text-gray-900/50 dark:text-white/50">Balance After (min $30 reserve)</span>
+                                    <span className={`font-bold ${(user?.balance - Number(amount) * (1 + feeRate)) < 30 ? 'text-red-400' : 'text-green-400'}`}>
                                         ${(user?.balance - Number(amount) * (1 + feeRate)).toFixed(2)}
                                     </span>
                                 </div>

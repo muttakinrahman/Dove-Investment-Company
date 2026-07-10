@@ -54,7 +54,7 @@ const Lend = () => {
 
     // Check if Level 1 user has deposited at least $50 total (lifetime)
     const totalLifetimeDeposits = user?.totalLifetimeDeposits || 0;
-    const isLevel1LowBalance = user?.vipLevel === 0 && totalLifetimeDeposits < 50;
+    const isLevel1LowBalance = user?.vipLevel === 0 && totalLifetimeDeposits < 30;
 
     useEffect(() => {
         const fetchPackages = async () => {
@@ -194,9 +194,9 @@ const Lend = () => {
                         <div>
                             <p className="font-bold text-xs mb-1 text-red-400">⚠️ Investment Cancelled – Insufficient Deposits</p>
                             <p className="text-[11px] leading-relaxed opacity-90">
-                                Your lend package(s) <strong>({autoCancelInfo.cancelled.join(', ')})</strong> have been automatically cancelled because your total deposits are below <strong>$50.00</strong>. Your invested amount has been returned to your available balance (<strong>${(autoCancelInfo.newBalance || 0).toFixed(2)}</strong>).
+                                Your lend package(s) <strong>({autoCancelInfo.cancelled.join(', ')})</strong> have been automatically cancelled because your total deposits are below <strong>$30.00</strong>. Your invested amount has been returned to your available balance (<strong>${(autoCancelInfo.newBalance || 0).toFixed(2)}</strong>).
                             </p>
-                            <p className="text-[10px] mt-1.5 opacity-70">Please deposit at least $50 total to restart lending.</p>
+                            <p className="text-[10px] mt-1.5 opacity-70">Please deposit at least $30 total to restart lending.</p>
                             <div className="flex gap-2 mt-3">
                                 <button
                                     onClick={() => navigate('/recharge')}
@@ -222,7 +222,7 @@ const Lend = () => {
                         <div>
                             <p className="font-bold text-xs mb-1">⚠️ Deposit Required for Lending</p>
                             <p className="text-[11px] leading-relaxed opacity-90">
-                                Your total deposits are <strong>${totalLifetimeDeposits.toFixed(2)}</strong>, which is below the required <strong>$50.00</strong> minimum. Please deposit more funds to start lending.
+                                Your total deposits are <strong>${totalLifetimeDeposits.toFixed(2)}</strong>, which is below the required <strong>$30.00</strong> minimum. Please deposit more funds to start lending.
                             </p>
                             <button
                                 onClick={() => navigate('/recharge')}
@@ -395,7 +395,7 @@ const Lend = () => {
                                         <button
                                             onClick={() => {
                                                 if (activeCount > 0) return;
-                                                // Block Level 1 users with totalFunds < $50
+                                                // Block Level 1 users with totalFunds < $30
                                                 if (isLevel1LowBalance) {
                                                     navigate('/recharge');
                                                     return;

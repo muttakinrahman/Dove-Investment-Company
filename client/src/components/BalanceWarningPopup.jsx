@@ -116,17 +116,17 @@ const BalanceWarningPopup = ({ warningInfo, onClose }) => {
                             </div>
                             <div className="flex items-end gap-1">
                                 <span className="text-white font-black text-3xl">${totalBalance}</span>
-                                <span className="text-white/60 text-sm mb-1">/ $50.00 required</span>
+                                <span className="text-white/60 text-sm mb-1">/ $30.00 required</span>
                             </div>
                             {/* Progress bar */}
                             <div className="mt-3 h-2 bg-white/20 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-white rounded-full transition-all"
-                                    style={{ width: `${Math.min(100, (warningInfo.totalBalance / 50) * 100)}%` }}
+                                    style={{ width: `${Math.min(100, (warningInfo.totalBalance / 30) * 100)}%` }}
                                 />
                             </div>
                             <p className="text-white/60 text-[10px] mt-1 text-right">
-                                ${Math.max(0, 50 - warningInfo.totalBalance).toFixed(2)} more needed
+                                ${Math.max(0, 30 - warningInfo.totalBalance).toFixed(2)} more needed
                             </p>
                         </div>
 
@@ -156,7 +156,7 @@ const BalanceWarningPopup = ({ warningInfo, onClose }) => {
                         {/* Warning Message */}
                         <div className="bg-black/20 rounded-2xl p-3 mb-5 backdrop-blur-sm">
                             <p className="text-white/90 text-xs text-center leading-relaxed">
-                                <strong>If you do not maintain a $50 balance</strong> within the time limit, your account will become{' '}
+                                <strong>If you do not maintain a $30 balance</strong> within the time limit, your account will become{' '}
                                 <span className="text-white font-black">inactive</span> and
                                 you will be removed from your referrer's active member list.
                             </p>

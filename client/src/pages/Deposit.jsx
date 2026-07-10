@@ -33,7 +33,7 @@ export default function Deposit() {
   const [net, setNet] = useState('BSC');
   const [amount, setAmount] = useState(pkgInfo?.minAmount || '');
   const [txHash, setTxHash] = useState('');
-  const [minDeposit, setMinDeposit] = useState(30);
+  const [minDeposit, setMinDeposit] = useState(10);
   const [wallets, setWallets] = useState({ TRC20:'', BSC:'' });
   const [autoMode, setAutoMode] = useState(true); // default: NowPayments
   const [npApi, setNpApi] = useState(true);

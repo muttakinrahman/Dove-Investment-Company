@@ -111,7 +111,7 @@ async function checkUser() {
             .filter(inv => inv.status === 'active')
             .reduce((s, inv) => s + inv.package.investmentAmount, 0);
         const combinedBal    = (user.balance || 0) + activeLend;
-        const reserveOk      = combinedBal >= 50;
+        const reserveOk      = combinedBal >= 30;
 
         console.log('\n═══════════════════════════════════════════════════');
         console.log('💼 Balance তথ্য');
@@ -119,7 +119,7 @@ async function checkUser() {
         console.log(`  Available Balance     : $${(user.balance || 0).toFixed(2)}`);
         console.log(`  Active Lend (locked)  : $${activeLend.toFixed(2)}`);
         console.log(`  Combined Total        : $${combinedBal.toFixed(2)}`);
-        console.log(`  $50 Reserve চেক       : ${reserveOk ? `✅ পাস ($${combinedBal.toFixed(2)} >= $50)` : `❌ ফেল ($${combinedBal.toFixed(2)} < $50)`}`);
+        console.log(`  $30 Reserve চেক       : ${reserveOk ? `✅ পাস ($${combinedBal.toFixed(2)} >= $30)` : `❌ ফেল ($${combinedBal.toFixed(2)} < $30)`}`);
 
         // ── Max Withdrawable ──
         let maxW = 0;
@@ -131,7 +131,7 @@ async function checkUser() {
             );
         } else {
             // Phase 2: combined balance থেকে $50 বাদ দিয়ে, remaining cap পর্যন্ত
-            const free = combinedBal - 50;
+            const free = combinedBal - 30;
             maxW = Math.min(
                 Math.floor(free / 1.05),
                 Math.floor(remainingCap > 0 ? remainingCap : 0)
@@ -148,7 +148,7 @@ async function checkUser() {
             if (remainingCap <= 0) {
                 console.log(`  📌 কারণ: 150% cap শেষ হয়ে গেছে। আরো deposit করতে হবে।`);
             } else if (!reserveOk) {
-                console.log(`  📌 কারণ: $50 reserve নেই। Balance বাড়াতে হবে।`);
+                console.log(`  📌 কারণ: $30 reserve নেই। Balance বাড়াতে হবে।`);
             }
         } else {
             console.log(`  ✅ Withdraw করতে পারবে (BSC 5% fee সহ)`);

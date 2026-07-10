@@ -12,11 +12,11 @@ const updateMinDeposit = async () => {
         // Update or create SystemSettings with new minimum deposit
         const result = await SystemSettings.findOneAndUpdate(
             {}, // Find any SystemSettings document
-            { minDepositAmount: 30 }, // Update minDepositAmount to 30
+            { minDepositAmount: 10 }, // Update minDepositAmount to 10
             { upsert: true, new: true } // Create if doesn't exist, return updated doc
         );
 
-        console.log('✅ Updated minimum deposit amount to 30 USDT');
+        console.log('✅ Updated minimum deposit amount to 10 USDT');
         console.log('Current settings:', result);
 
         process.exit(0);

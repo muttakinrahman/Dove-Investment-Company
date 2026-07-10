@@ -4,10 +4,10 @@
  * Rules:
  * - ONLY applies to users who have at least 1 approved deposit.
  *   (New users with only the $5 welcome bonus are EXEMPT.)
- * - If user's total balance (available + active lend principal) < $50:
+ * - If user's total balance (available + active lend principal) < $30:
  *     → Set balanceWarningDate (if not already set)
- *     → After 3 days still < $50 → isTeamMember = false (user becomes inactive)
- * - If user's total balance >= $50:
+ *     → After 3 days still < $30 → isTeamMember = false (user becomes inactive)
+ * - If user's total balance >= $30:
  *     → Clear balanceWarningDate (user recovered)
  *
  * Also handles:
@@ -18,7 +18,7 @@
 import User from '../models/User.js';
 import Deposit from '../models/Deposit.js';
 
-const MINIMUM_BALANCE = 50;
+const MINIMUM_BALANCE = 30;
 const WARNING_HOURS = 72; // 3 days
 
 /**
@@ -50,7 +50,7 @@ export const releaseLendInvestments = (user) => {
 };
 
 /**
- * Check user's balance and enforce the $50 minimum rule.
+ * Check user's balance and enforce the $30 minimum rule.
  * Must be called AFTER user is fetched from DB but BEFORE saving.
  *
  * IMPORTANT: This rule ONLY applies to users who have made at least 1 approved deposit.
@@ -95,7 +95,7 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
     // ── BALANCE CHECK (only for depositors) ──
     if (totalBalance < MINIMUM_BALANCE) {
         if (!user.balanceWarningDate) {
-            // First time dropping below $50 — start the warning clock
+            // First time dropping below $30 — start the warning clock
             user.balanceWarningDate = now;
             dirty = true;
             console.log(`[BalanceCheck] WARNING STARTED for ${user.email || user.phone}. Balance: $${totalBalance.toFixed(2)}`);
@@ -133,7 +133,7 @@ export const checkAndEnforceMinBalance = async (user, saveUser = true) => {
         };
 
     } else {
-        // Balance is >= $50 — user has recovered
+        // Balance is >= $30 — user has recovered
         if (user.balanceWarningDate) {
             user.balanceWarningDate = null;
             dirty = true;
