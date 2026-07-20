@@ -385,6 +385,7 @@ const getEmailTemplate = (type, data) => {
                     </div>
                 </div>
             </body>
+        `,
         customMessage: `
             ${baseStyle}
             <body>
