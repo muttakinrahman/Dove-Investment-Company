@@ -3,18 +3,25 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Create transporter based on environment
-const createTransporter = () => {
-    // Using Gmail SMTP for now - admin can configure Brevo/SendGrid later
-    return nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD
-        }
-    });
+// Cached transporter pool for optimal bulk email performance
+let cachedTransporter = null;
+
+const getTransporter = () => {
+    if (!cachedTransporter) {
+        cachedTransporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.SMTP_PORT) || 587,
+            secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for other ports
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD
+            },
+            pool: true, // Use connection pooling
+            maxConnections: 5,
+            maxMessages: 100
+        });
+    }
+    return cachedTransporter;
 };
 
 // Email templates with beautiful HTML design
@@ -414,7 +421,7 @@ export const sendEmail = async ({ to, subject, type, data }) => {
             return { success: false, message: 'SMTP not configured' };
         }
 
-        const transporter = createTransporter();
+        const transporter = getTransporter();
 
         const mailOptions = {
             from: `"${process.env.SMTP_FROM_NAME || 'Dove'}" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
@@ -521,7 +528,7 @@ export const sendVerificationEmail = async (email, otpCode) => {
             return false;
         }
 
-        const transporter = createTransporter();
+        const transporter = getTransporter();
         const subject = 'Your Verification Code - Dove Investment Gold Mine';
         
         // Use consistent from field like sendEmail

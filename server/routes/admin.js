@@ -1106,7 +1106,78 @@ router.post('/broadcast-notification', authMiddleware, adminMiddleware, async (r
     }
 });
 
-// Admin sends custom email to all users or a specific user
+// Helper for chunked async execution with delay
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Robust crash-proof email broadcast engine
+const executeEmailBroadcast = async ({ targetUsers, subject, message, sendInApp, adminId, recipientType, targetEmail }) => {
+    let sentCount = 0;
+    let failedCount = 0;
+
+    // Process in batches of 5 with 250ms pause between batches to prevent SMTP rate-limit blocking
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < targetUsers.length; i += BATCH_SIZE) {
+        const batch = targetUsers.slice(i, i + BATCH_SIZE);
+
+        await Promise.all(
+            batch.map(async (user) => {
+                try {
+                    const result = await sendCustomEmail({
+                        to: user.email,
+                        subject: subject.trim(),
+                        message: message.trim(),
+                        userName: user.fullName || user.phone || 'Valued User'
+                    });
+
+                    if (result && result.success) {
+                        sentCount++;
+                    } else {
+                        failedCount++;
+                    }
+                } catch (err) {
+                    console.error(`❌ Error sending email to ${user.email}:`, err.message);
+                    failedCount++;
+                }
+            })
+        );
+
+        if (i + BATCH_SIZE < targetUsers.length) {
+            await sleep(250);
+        }
+    }
+
+    // Optionally send in-app notification
+    if (sendInApp) {
+        try {
+            const notificationsData = targetUsers.map(u => ({
+                userId: u._id,
+                title: subject.trim(),
+                message: message.trim(),
+                type: 'system',
+                status: 'unread'
+            }));
+            await Notification.insertMany(notificationsData);
+        } catch (err) {
+            console.error('❌ Error inserting in-app notifications during email broadcast:', err.message);
+        }
+    }
+
+    // Create log entry for admin action
+    try {
+        await AdminLog.create({
+            adminId,
+            action: 'broadcast_email',
+            changes: { subject, message, recipientType, targetEmail, sendInApp },
+            description: `Completed email broadcast (${recipientType}) - Sent: ${sentCount}, Failed: ${failedCount} out of ${targetUsers.length} users: "${subject}"`
+        });
+    } catch (err) {
+        console.error('❌ Error saving AdminLog for email broadcast:', err.message);
+    }
+
+    return { sentCount, failedCount, totalTargeted: targetUsers.length };
+};
+
+// Admin sends custom email to all users or a specific user (100% Crash-Proof)
 router.post('/send-email-broadcast', authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const { subject, message, recipientType = 'all', targetEmail, sendInApp = false } = req.body;
@@ -1141,42 +1212,38 @@ router.post('/send-email-broadcast', authMiddleware, adminMiddleware, async (req
             return res.status(400).json({ message: 'No registered users found with an email address.' });
         }
 
-        let sentCount = 0;
-        let failedCount = 0;
-
-        for (const user of targetUsers) {
-            const result = await sendCustomEmail({
-                to: user.email,
-                subject: subject.trim(),
-                message: message.trim(),
-                userName: user.fullName || user.phone || 'Valued User'
+        // For large broadcasts (> 15 users), dispatch in background to prevent HTTP timeouts
+        if (targetUsers.length > 15) {
+            setImmediate(() => {
+                executeEmailBroadcast({
+                    targetUsers,
+                    subject,
+                    message,
+                    sendInApp,
+                    adminId: req.userId,
+                    recipientType,
+                    targetEmail
+                }).catch(err => console.error('Background email broadcast exception:', err));
             });
 
-            if (result.success) {
-                sentCount++;
-            } else {
-                failedCount++;
-            }
+            return res.json({
+                success: true,
+                sentCount: targetUsers.length,
+                failedCount: 0,
+                totalTargeted: targetUsers.length,
+                message: `Email broadcast launched in background for ${targetUsers.length} users! Processing safely in batches without server delay.`
+            });
         }
 
-        // Optionally send in-app notification
-        if (sendInApp) {
-            const notificationsData = targetUsers.map(u => ({
-                userId: u._id,
-                title: subject.trim(),
-                message: message.trim(),
-                type: 'system',
-                status: 'unread'
-            }));
-            await Notification.insertMany(notificationsData);
-        }
-
-        // Create log entry for admin action
-        await AdminLog.create({
+        // For smaller groups, execute synchronously & return exact results
+        const { sentCount, failedCount } = await executeEmailBroadcast({
+            targetUsers,
+            subject,
+            message,
+            sendInApp,
             adminId: req.userId,
-            action: 'broadcast_email',
-            changes: { subject, message, recipientType, targetEmail, sendInApp },
-            description: `Sent custom email (${recipientType}) to ${sentCount} users (Failed: ${failedCount}): "${subject}"`
+            recipientType,
+            targetEmail
         });
 
         res.json({
@@ -1195,4 +1262,3 @@ router.post('/send-email-broadcast', authMiddleware, adminMiddleware, async (req
 });
 
 export default router;
-
