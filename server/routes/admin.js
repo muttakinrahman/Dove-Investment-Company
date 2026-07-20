@@ -106,16 +106,18 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
 
         const query = { role: { $ne: 'admin' } };
         if (search) {
-            const isNumeric = /^\d+$/.test(search.trim());
+            const cleanSearch = search.trim();
+            const isNumeric = /^\d+$/.test(cleanSearch);
             if (isNumeric) {
                 // Pure number → exact memberId match only
-                query.memberId = parseInt(search.trim(), 10);
+                query.memberId = parseInt(cleanSearch, 10);
             } else {
+                const escaped = cleanSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 query.$or = [
-                    { phone: { $regex: search, $options: 'i' } },
-                    { email: { $regex: search, $options: 'i' } },
-                    { fullName: { $regex: search, $options: 'i' } },
-                    { invitationCode: { $regex: search, $options: 'i' } }
+                    { phone: { $regex: escaped, $options: 'i' } },
+                    { email: { $regex: escaped, $options: 'i' } },
+                    { fullName: { $regex: escaped, $options: 'i' } },
+                    { invitationCode: { $regex: escaped, $options: 'i' } }
                 ];
             }
         }
@@ -953,13 +955,14 @@ router.get('/referral-search', authMiddleware, adminMiddleware, async (req, res)
                 memberId: parseInt(q.trim(), 10)
             };
         } else {
+            const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             findQuery = {
                 role: { $ne: 'admin' },
                 $or: [
-                    { phone: { $regex: q.trim(), $options: 'i' } },
-                    { email: { $regex: q.trim(), $options: 'i' } },
-                    { fullName: { $regex: q.trim(), $options: 'i' } },
-                    { invitationCode: { $regex: q.trim(), $options: 'i' } }
+                    { phone: { $regex: escaped, $options: 'i' } },
+                    { email: { $regex: escaped, $options: 'i' } },
+                    { fullName: { $regex: escaped, $options: 'i' } },
+                    { invitationCode: { $regex: escaped, $options: 'i' } }
                 ]
             };
         }
