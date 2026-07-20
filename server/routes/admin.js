@@ -15,6 +15,7 @@ import { distributeCommissions } from '../utils/teamCommissions.js';
 import Commission from '../models/Commission.js';
 import bcrypt from 'bcryptjs';
 import Notification from '../models/Notification.js';
+import { sendCustomEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -1102,6 +1103,94 @@ router.post('/broadcast-notification', authMiddleware, adminMiddleware, async (r
     } catch (error) {
         console.error('Broadcast notification error:', error);
         res.status(500).json({ message: 'Server error broadcasting notification' });
+    }
+});
+
+// Admin sends custom email to all users or a specific user
+router.post('/send-email-broadcast', authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { subject, message, recipientType = 'all', targetEmail, sendInApp = false } = req.body;
+
+        if (!subject || !subject.trim()) {
+            return res.status(400).json({ message: 'Email subject is required.' });
+        }
+        if (!message || !message.trim()) {
+            return res.status(400).json({ message: 'Email message content is required.' });
+        }
+
+        let targetUsers = [];
+
+        if (recipientType === 'single') {
+            if (!targetEmail || !targetEmail.trim()) {
+                return res.status(400).json({ message: 'Target email address is required for single user recipient.' });
+            }
+            const user = await User.findOne({ email: targetEmail.trim().toLowerCase() });
+            if (!user) {
+                return res.status(400).json({ message: `No user found with email address: ${targetEmail}` });
+            }
+            targetUsers = [user];
+        } else {
+            // All non-admin users with valid email
+            targetUsers = await User.find({
+                role: { $ne: 'admin' },
+                email: { $exists: true, $ne: null, $ne: '' }
+            }).select('_id email fullName phone');
+        }
+
+        if (targetUsers.length === 0) {
+            return res.status(400).json({ message: 'No registered users found with an email address.' });
+        }
+
+        let sentCount = 0;
+        let failedCount = 0;
+
+        for (const user of targetUsers) {
+            const result = await sendCustomEmail({
+                to: user.email,
+                subject: subject.trim(),
+                message: message.trim(),
+                userName: user.fullName || user.phone || 'Valued User'
+            });
+
+            if (result.success) {
+                sentCount++;
+            } else {
+                failedCount++;
+            }
+        }
+
+        // Optionally send in-app notification
+        if (sendInApp) {
+            const notificationsData = targetUsers.map(u => ({
+                userId: u._id,
+                title: subject.trim(),
+                message: message.trim(),
+                type: 'system',
+                status: 'unread'
+            }));
+            await Notification.insertMany(notificationsData);
+        }
+
+        // Create log entry for admin action
+        await AdminLog.create({
+            adminId: req.userId,
+            action: 'broadcast_email',
+            changes: { subject, message, recipientType, targetEmail, sendInApp },
+            description: `Sent custom email (${recipientType}) to ${sentCount} users (Failed: ${failedCount}): "${subject}"`
+        });
+
+        res.json({
+            success: true,
+            sentCount,
+            failedCount,
+            totalTargeted: targetUsers.length,
+            message: recipientType === 'single'
+                ? (sentCount > 0 ? `Email successfully sent to ${targetUsers[0].email}` : `Failed to send email to ${targetUsers[0].email}`)
+                : `Email broadcast completed! Sent: ${sentCount}, Failed: ${failedCount} (Total users with email: ${targetUsers.length})`
+        });
+    } catch (error) {
+        console.error('Email broadcast error:', error);
+        res.status(500).json({ message: 'Server error while sending email broadcast' });
     }
 });
 

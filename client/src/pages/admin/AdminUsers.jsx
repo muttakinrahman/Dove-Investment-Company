@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound, Briefcase, Coins, X, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Edit2, Search, LogIn, ShieldBan, ShieldCheck, KeyRound, Briefcase, Coins, X, ChevronRight, AlertTriangle, Mail } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const AdminUsers = () => {
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -269,6 +271,16 @@ const AdminUsers = () => {
                                                     <LogIn size={13} />
                                                     <span>Login</span>
                                                 </button>
+                                                {user.email && (
+                                                    <button
+                                                        onClick={() => navigate('/admin/notifications', { state: { email: user.email } })}
+                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-500/20 text-indigo-400 rounded-lg hover:bg-indigo-500 hover:text-white transition-all text-xs font-bold"
+                                                        title="Send custom email to user"
+                                                    >
+                                                        <Mail size={13} />
+                                                        <span>Email</span>
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleToggleBlock(user)}
                                                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all text-xs font-bold ${

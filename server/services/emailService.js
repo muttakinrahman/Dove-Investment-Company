@@ -378,10 +378,31 @@ const getEmailTemplate = (type, data) => {
                     </div>
                 </div>
             </body>
+        customMessage: `
+            ${baseStyle}
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1 class="logo">Dove Investment Gold Mine</h1>
+                        <p class="tagline">Official Announcement</p>
+                    </div>
+                    <div class="content">
+                        <h2 class="title">${data.subject || 'Notice from Dove Investment'}</h2>
+                        <p class="message">Hello <strong>${data.userName || 'Valued Member'}</strong>,</p>
+                        <div style="color: #4a5568; line-height: 1.7; font-size: 15px; background: #f8fafc; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea; margin: 20px 0; white-space: pre-wrap;">${data.message}</div>
+                        <p class="message">Thank you for being part of Dove Investment Gold Mine.</p>
+                    </div>
+                    <div class="footer">
+                        <p class="footer-text"><strong>Dove Investment Gold Mine</strong></p>
+                        <p class="footer-text">doveinvestment.cloud</p>
+                        <p class="footer-text">Need help? <a href="https://doveinvestment.cloud" class="support-link">Contact Support</a></p>
+                    </div>
+                </div>
+            </body>
         `
     };
 
-    return templates[type] || templates.withdrawalRequest;
+    return templates[type] || templates.customMessage || templates.withdrawalRequest;
 };
 
 // Send email function
@@ -479,6 +500,19 @@ export const sendDepositReceivedEmail = async (user, deposit) => {
     });
 };
 
+export const sendCustomEmail = async ({ to, subject, message, userName }) => {
+    return sendEmail({
+        to,
+        subject,
+        type: 'customMessage',
+        data: {
+            userName: userName || 'Valued User',
+            subject,
+            message
+        }
+    });
+};
+
 export const sendVerificationEmail = async (email, otpCode) => {
     try {
         // Validate SMTP configuration
@@ -514,5 +548,6 @@ export default {
     sendWithdrawalApprovedEmail,
     sendDepositApprovedEmail,
     sendDepositReceivedEmail,
+    sendCustomEmail,
     sendVerificationEmail
 };
