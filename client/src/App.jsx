@@ -39,6 +39,7 @@ import DiamondSalary from './pages/DiamondSalary';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Maintenance from './pages/Maintenance';
+import ImpersonateBanner from './components/ImpersonateBanner';
 import MyTeam from './pages/MyTeam';
 import TeamBusiness from './pages/TeamBusiness';
 import axios from 'axios';
@@ -124,6 +125,7 @@ function App() {
 
     return (
         <>
+            <ImpersonateBanner />
             <Routes>
                 {/* Public Routes */}
                 <Route path="/login" element={<Login />} />

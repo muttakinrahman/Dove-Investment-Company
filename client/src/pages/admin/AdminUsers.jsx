@@ -81,9 +81,9 @@ const AdminUsers = () => {
             // Replace with user's token
             localStorage.setItem('token', response.data.token);
 
-            toast.success(`Logged in as ${user.fullName || user.email}`);
+            toast.success(`Logged in as ${user.fullName || user.email || user.phone}`);
             // Redirect to home page as the user
-            window.location.href = '/';
+            window.location.href = '/home';
         } catch (error) {
             console.error('Error logging in as user:', error);
             toast.error('Failed to login as user');
