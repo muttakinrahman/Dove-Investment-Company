@@ -9,8 +9,8 @@ const packages = [
     {
         name: '7 Days Plan (L0)',
         duration: 7,
-        minAmount: 15,
-        maxAmount: 40,
+        minAmount: 10,
+        maxAmount: 49,
         dailyRate: 0.90,
         color: 'from-blue-500 to-cyan-400',
         bg: 'bg-blue-500/10',

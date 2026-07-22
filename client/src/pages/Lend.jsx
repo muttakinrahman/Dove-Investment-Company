@@ -52,7 +52,7 @@ const Lend = () => {
     // Determine which level to show: active state or current user level
     const targetLevel = location.state?.viewLevel !== undefined ? location.state.viewLevel : (user?.vipLevel || 0);
 
-    // Check if Level 1 user has deposited at least $50 total (lifetime)
+    // Check if Level 1 user has deposited at least $30 total (lifetime)
     const totalLifetimeDeposits = user?.totalLifetimeDeposits || 0;
     const isLevel1LowBalance = user?.vipLevel === 0 && totalLifetimeDeposits < 30;
 

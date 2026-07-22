@@ -66,7 +66,7 @@ router.get('/packages', authMiddleware, async (req, res) => {
 
         // ===== Level 1 Auto-Cancel Logic =====
         // Only applies to Level 1 users (vipLevel === 0) viewing their own Level 1 packages.
-        // If their total funds (available balance + all active investment principals) < $50,
+        // If their total funds (available balance + all active investment principals) < $30,
         // cancel all active investments and return principal amounts to available balance.
         let level1AutoCancelled = false;
         let cancelledPackages = [];
@@ -77,7 +77,7 @@ router.get('/packages', authMiddleware, async (req, res) => {
             const totalLockedInLend = activeInvestments.reduce((sum, inv) => sum + (inv.package.investmentAmount || 0), 0);
             const totalFunds = user.balance + totalLockedInLend;
 
-            if (totalFunds < 50 && activeInvestments.length > 0) {
+            if (totalFunds < 30 && activeInvestments.length > 0) {
                 // Cancel all active investments and refund principals
                 let refundTotal = 0;
 
@@ -99,7 +99,7 @@ router.get('/packages', authMiddleware, async (req, res) => {
                 await createNotification({
                     userId: user._id,
                     title: 'Investment Cancelled – Low Balance',
-                    message: `Your active lend package(s) (${cancelledPackages.join(', ')}) have been cancelled and $${refundTotal.toFixed(2)} has been returned to your available balance because your total balance dropped below $50. Please deposit more to restart lending.`,
+                    message: `Your active lend package(s) (${cancelledPackages.join(', ')}) have been cancelled and $${refundTotal.toFixed(2)} has been returned to your available balance because your total balance dropped below $30. Please deposit more to restart lending.`,
                     type: 'investment',
                     amount: refundTotal
                 });
@@ -167,8 +167,8 @@ router.post('/create', authMiddleware, async (req, res) => {
         const user = await User.findById(req.userId);
 
         // ===== Level 1 (vipLevel 0) Minimum Total Deposit Check =====
-        // Fresh users must have deposited at least $50 TOTAL (sum of all approved deposits)
-        // Once they reach $50+ lifetime deposits, they can lend freely.
+        // Fresh users must have deposited at least $30 TOTAL (sum of all approved deposits)
+        // Once they reach $30+ lifetime deposits, they can lend freely.
         if (user.vipLevel === 0) {
             const depositAgg = await Deposit.aggregate([
                 { $match: { userId: user._id, status: 'approved' } },
@@ -176,12 +176,12 @@ router.post('/create', authMiddleware, async (req, res) => {
             ]);
             const totalLifetimeDeposits = depositAgg.length > 0 ? depositAgg[0].total : 0;
 
-            if (totalLifetimeDeposits < 50) {
+            if (totalLifetimeDeposits < 30) {
                 return res.status(400).json({
-                    message: `Your total deposits are $${totalLifetimeDeposits.toFixed(2)}. You need at least $50 in total deposits to start lending. Please deposit more funds.`,
+                    message: `Your total deposits are $${totalLifetimeDeposits.toFixed(2)}. You need at least $30 in total deposits to start lending. Please deposit more funds.`,
                     code: 'LEVEL1_LOW_BALANCE',
                     totalDeposited: totalLifetimeDeposits,
-                    required: 50
+                    required: 30
                 });
             }
         }
